@@ -1,5 +1,5 @@
-fastapi>=0.78.0
-uvicorn>=0.18.2
-pydantic>=1.9.1
-PyJWT>=0.1.0
-SQLAlchemy>=0.1.0
+fastapi==0.78.0
+uvicorn==0.18.2
+pyjwt==2.4.0
+pydantic==1.9.1
+sqlalchemy==1.4.39
