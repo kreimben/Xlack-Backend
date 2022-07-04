@@ -6,7 +6,7 @@ from .database import Base
 class User(Base):
     __tablename__ = 'users'
 
-    user_id = Column(Integer(), autocrement=True, unique=True, primary_key=True, nullable=False)
+    user_id = Column(Integer(), autoincrement=True, unique=True, primary_key=True, nullable=False)
     uuid = Column(String(25), unique=True, nullable=False)
 
     github_id = Column(String(100), unique=True, nullable=True)
