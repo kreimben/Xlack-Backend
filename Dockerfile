@@ -9,4 +9,4 @@ RUN ls -hal /app
 
 EXPOSE 10131
 
-CMD ["python3 /app/main.py"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
