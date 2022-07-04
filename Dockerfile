@@ -2,11 +2,11 @@ FROM python:3.10.5-bullseye
 
 WORKDIR app
 
-COPY . .
-
-EXPOSE 10131
+COPY . /app
 
 RUN pip install -r requirements.txt
 
-CMD ["ls -hal /app"]
-CMD ["python /app/main.py"]
+EXPOSE 10131
+
+CMD ["ls", "-hal", "/app"]
+CMD ["python main.py"]
