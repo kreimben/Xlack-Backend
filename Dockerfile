@@ -9,4 +9,4 @@ RUN pip install -r requirements.txt
 EXPOSE 10131
 
 CMD ["ls", "-hal", "/app"]
-CMD ["python main.py"]
+CMD ["python3 main.py"]
