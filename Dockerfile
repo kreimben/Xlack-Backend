@@ -8,4 +8,4 @@ EXPOSE 10131
 
 RUN pip install -r requirements.txt
 
-CMD ["python main.py"]
+CMD ["python /app/main.py"]
