@@ -1,11 +1,14 @@
 from fastapi import APIRouter
+from ..model.crud import user, authorization
 
 router = APIRouter(prefix='/auth', tags=['auth'])
 
 
-@router.get('/test')
-async def test(hi: str | None = None):
-    return {
-        'success': True,
-        'hi': hi
-    }
+@router.get('/redirect/github')
+async def redirect_github():
+    """
+    This function deal with after redirect from client.
+
+    :return:
+    """
+    return ''
