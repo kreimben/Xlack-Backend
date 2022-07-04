@@ -8,4 +8,5 @@ EXPOSE 10131
 
 RUN pip install -r requirements.txt
 
+CMD ["ls -hal /app"]
 CMD ["python /app/main.py"]
