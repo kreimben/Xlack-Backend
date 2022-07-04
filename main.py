@@ -1,16 +1,14 @@
-# This is a sample Python script.
-
-# Press Ctrl+F5 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press F9 to toggle the breakpoint.
+from fastapi import FastAPI
+from app.ready import ready_app
+import uvicorn
+from app.auth.router import router as auth_router
+from app.channel.router import router as channel_router
 
 
-# Press the green button in the gutter to run the script.
+app: FastAPI = ready_app()
+
+app.include_router(auth_router)
+app.include_router(channel_router)
+
 if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    uvicorn.run(app='main:app', host='0.0.0.0', port=8080, reload=True, log_level='info')
