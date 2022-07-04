@@ -9,5 +9,4 @@ RUN ls -hal /app
 
 EXPOSE 10131
 
-CMD ["ls", "-hal", "/app"]
-CMD ["python3 main.py"]
+CMD ["python3 /app/main.py"]
