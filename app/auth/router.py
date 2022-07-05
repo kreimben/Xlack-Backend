@@ -68,5 +68,6 @@ async def get_user_info(github_access_token: str = Query(
     res = get_user_data_from_github(github_access_token)
     return {
         'success': True,
-        'message': res
+        'message': 'Successfully get user information from github.',
+        'github_info': json.loads(res.content)
     }
