@@ -45,7 +45,8 @@ async def redirect_github(request: Request, code: str):
 
     return {
         'success': True,
-        'message': res
+        'message': 'Successfully get access token from github.',
+        'access_token': access_token
     }
 
 
