@@ -1,3 +1,5 @@
+import numbers
+
 from pydantic import BaseModel, validator
 from datetime import datetime
 from .crud.authorization import read_authorizations, read_authorization
@@ -11,18 +13,6 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     authorization: str
-
-    @validator('authorization')
-    async def check_authorization(cls, v):
-        auths = await read_authorizations()
-        if len(auths) == 0:
-            raise ValueError('No authorizations in database.\nMake authorizations FIRST!')
-
-        auth = await read_authorization(name=v)
-        if not auth:
-            raise ValueError('No such authorization. Please type it again!')
-
-        return auth.name
 
 
 class User(UserBase):
