@@ -13,7 +13,7 @@ async def login_github():
 
 
 @router.get('/redirect/github')
-async def redirect_github(request: Request, code: str):
+async def redirect_github(request: Request):
     """
     This function deal with after redirect from client.
 
@@ -22,7 +22,9 @@ async def redirect_github(request: Request, code: str):
 
     print(f'request body: {request.body()}')
 
-    res = exchange_code_for_access_token(code)
+    print(f'params: {request.query_params}')
+
+    res = exchange_code_for_access_token('sdf')
 
     print(f'res: {res}')
 
