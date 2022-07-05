@@ -25,6 +25,6 @@ class User(Base):
 class Authorization(Base):
     __tablename__ = 'authorizations'
 
-    uuid = Column(String(50), unique=True, nullable=False, primary_key=True, default=uuid.uuid4())
-    name = Column(String(25), nullable=False)
+    uuid = Column(String(50), nullable=False, primary_key=True, default=uuid.uuid4())
+    name = Column(String(25), unique=True, nullable=False)
     created_at = Column(TIMESTAMP(), nullable=False, default=func.now())
