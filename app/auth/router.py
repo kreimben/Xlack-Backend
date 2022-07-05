@@ -10,7 +10,6 @@ router = APIRouter(prefix='/auth', tags=['auth'])
 @router.get('/login')
 async def login_github():
     client_id = os.getenv('GITHUB_CLIENT_ID')
-    # redirect_uri = 'https://xlack.kreimben.com/auth/redirect/github'
     scope = 'read:user'
     url = f'https://github.com/login/oauth/authorize?client_id={client_id}&scope={scope}'
     print(f'url: {url}')
