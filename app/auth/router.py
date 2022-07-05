@@ -51,8 +51,21 @@ async def redirect_github(request: Request, code: str):
 
 
 @router.get('/user_info')
-async def get_user_info(access_token: str):
-    res = get_user_data_from_github(access_token)
+async def get_user_info(github_access_token: str = Query(
+    alias='Access Token From Github.',
+    title='github access token',
+    description='You should input only GITHUB ACCESS TOKEN!!!',
+    max_length=50,
+    min_length=30)
+):
+    """
+    When you get information from github directly using github access token.
+
+    :param github_access_token:
+    :return:
+    """
+
+    res = get_user_data_from_github(github_access_token)
     return {
         'success': True,
         'message': res
