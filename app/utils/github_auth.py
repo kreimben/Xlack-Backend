@@ -18,13 +18,6 @@ def exchange_code_for_access_token(code: str, redirect_uri: str | None = None):
 
     return res
 
-    # try:
-    #     json = res.json()
-    #     return json
-    # except JSONDecodeError as e:
-    #     print(f'exception on exchange_code_for_access_token: {e.__repr__()}')
-    #     return res
-
 
 def get_user_data_from_github(access_token: str):
     res = requests.get('https://api.github.com/user', auth=f'token {access_token}')
