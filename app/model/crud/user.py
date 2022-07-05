@@ -5,12 +5,15 @@ from .. import models
 import uuid
 
 """
-This functions are not capable to auth every actions.
+This functions are not capable to authentication every actions.
 """
 
 
-async def create_user(github_id: str, email: str, name: str, authorization_name: str = 'member',
-                db: Session = Depends(get_db)) -> models.User:
+async def create_user(db: Session,
+                      github_id: str,
+                      email: str,
+                      name: str,
+                      authorization_name: str = 'member') -> models.User:
     """
     Create user into database.
 
@@ -32,10 +35,10 @@ async def create_user(github_id: str, email: str, name: str, authorization_name:
     return user
 
 
-async def read_user(user_id: str | None = None,
-              github_id: str | None = None,
-              email: str | None = None,
-              db: Session = Depends(get_db)) -> models.User:
+async def read_user(db: Session,
+                    user_id: str | None = None,
+                    github_id: str | None = None,
+                    email: str | None = None) -> models.User:
     """
     Return user data using one of parameter below.
 
@@ -53,15 +56,15 @@ async def read_user(user_id: str | None = None,
         return db.query(models.User).filter(models.User.email == email).first()
 
 
-async def read_users(db: Session = Depends(get_db)) -> [models.User]:
+async def read_users(db: Session) -> [models.User]:
     return db.query(models.User).all()
 
 
-async def update_user(user_id: str,
-                email: str,
-                name: str,
-                authrization_name: str = 'member',
-                db: Session = Depends(get_db)) -> models.User:
+async def update_user(db: Session,
+                      user_id: str,
+                      email: str,
+                      name: str,
+                      authrization_name: str = 'member') -> models.User:
     """
     Identify user only with **user_id**!!!
     :param user_id: Using when identifying user.
@@ -81,7 +84,7 @@ async def update_user(user_id: str,
     return user
 
 
-async def delete_user(user_id: str, db: Session = Depends(get_db)) -> int:
+async def delete_user(user_id: str, db: Session) -> int:
     """
     Delete user using `user_id`. This function doesn't check authorization.
 
