@@ -1,4 +1,6 @@
 import os
+from json import JSONDecodeError
+
 import requests
 
 
@@ -18,7 +20,7 @@ def exchange_code_for_access_token(code: str, redirect_uri: str | None = None):
     try:
         json = res.json()
         return json
-    except Exception as e:
+    except JSONDecodeError as e:
         print(f'exception on exchange_code_for_access_token: {e.__repr__()}')
         return res
 
