@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from app.model.crud.authorization import read_authorization, delete_authorization, update_authorization, \
@@ -9,7 +9,7 @@ router = APIRouter(prefix='/authorization', tags=['authorization'])
 
 
 @router.post('/{name}')
-async def create_auth(name: str, db: Session = Depends(get_db)):
+async def create_auth(name: str = Query(max_length=25), db: Session = Depends(get_db)):
     auth = await read_authorization(name, db)
     if auth:
         return {
@@ -39,8 +39,8 @@ async def get_auth(name: str, db: Session = Depends(get_db)):
 
 
 @router.patch('/{old_name}&{new_name}')
-async def update_auth(old_name: str,
-                      new_name: str,
+async def update_auth(old_name: str = Query(max_length=25),
+                      new_name: str = Query(max_length=25),
                       db: Session = Depends(get_db)):
     auth = await update_authorization(old_name=old_name, new_name=new_name, db=db)
     return {
