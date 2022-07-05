@@ -20,8 +20,6 @@ async def redirect_github(request: Request):
     :return:
     """
 
-    print(f'request body: {request.body()}')
-
     print(f'params: {request.query_params}')
 
     res = exchange_code_for_access_token('sdf')
