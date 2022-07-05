@@ -30,8 +30,18 @@ async def redirect_github(request: Request, code: str):
 
     print(f'res: {res.content}')
 
-    access_token = res.content.split('&').split('=')[1]
-    print(f'access_token: {access_token}')
+    content = str(res.content)
+
+    first_word = content.split('&')[0].split('=')[0]
+
+    if first_word == 'b\'error':
+        return {
+            'success': False,
+            'message': 'Failed to get access token.',
+            'detail': content.split('&')[1].split('=')[1]
+        }
+
+    access_token = content.split('&')[0].split('=')[1]
 
     return {
         'success': True,
