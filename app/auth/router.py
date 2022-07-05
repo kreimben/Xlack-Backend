@@ -29,7 +29,7 @@ async def redirect_github(request: Request, code: str):
     print(f'code: {code}')
     res = exchange_code_for_access_token(code)
 
-    print(f'res: {res}')
+    print(f'res: {res.content}')
 
     return {
         'success': True,
