@@ -31,6 +31,9 @@ async def redirect_github(request: Request, code: str):
 
     print(f'res: {res.content}')
 
+    access_token = res.content.split('&').split('=')[1]
+    print(f'access_token: {access_token}')
+
     return {
         'success': True,
         'message': res
