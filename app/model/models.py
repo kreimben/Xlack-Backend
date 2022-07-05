@@ -12,12 +12,14 @@ class User(Base):
     github_id = Column(String(100), unique=True, nullable=True)
 
     email = Column(String(100), unique=True, nullable=True)
-    name = Column(String(100), unique=False, nullable=True)
+    name = Column(String(100), nullable=True)
 
     # `func.now()` means `TIMESTAMP.NOW()`.
     created_at = Column(TIMESTAMP(), nullable=False, default=func.now())
 
     authorization = Column(String(25), ForeignKey('authorizations.name'))
+
+    refresh_token = Column(String(100), unique=True, nullable=True)
 
 
 class Authorization(Base):
