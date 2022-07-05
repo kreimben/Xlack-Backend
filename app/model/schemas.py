@@ -10,6 +10,11 @@ class UserBase(BaseModel):
     email: str
     name: str
 
+    @validator('github_id')
+    def check_github_id_is_number(cls, v):
+        int(v)
+        return v
+
 
 class UserCreate(UserBase):
     authorization: str
