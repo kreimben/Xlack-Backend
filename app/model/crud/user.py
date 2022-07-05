@@ -67,6 +67,8 @@ async def update_user(db: Session,
                       authrization_name: str = 'member') -> models.User:
     """
     Identify user only with **user_id**!!!
+    Check authorization first!!!
+
     :param user_id: Using when identifying user.
     :param email: Field to update.
     :param name: Field to update.
