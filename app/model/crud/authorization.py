@@ -5,11 +5,11 @@ from .. import models
 import uuid
 
 """
-This functions are not capable to auth every actions.
+This functions are not capable to authentication every actions.
 """
 
 
-async def create_authorization(name: str, db: Session = Depends(get_db)) -> models.Authorization:
+async def create_authorization(name: str, db: Session) -> models.Authorization:
     """
     Create authorization into database.
 
@@ -24,22 +24,21 @@ async def create_authorization(name: str, db: Session = Depends(get_db)) -> mode
     return user
 
 
-async def read_authorization(name: str, db: Session = Depends(get_db)) -> models.Authorization:
+async def read_authorization(name: str, db: Session) -> models.Authorization:
     return db.query(models.Authorization).filter(models.Authorization.name == name).first()
 
 
-async def read_authorizations(db: Session = Depends(get_db)) -> [models.Authorization]:
+async def read_authorizations(db: Session) -> [models.Authorization]:
     return db.query(models.Authorization).all()
 
 
-async def update_authorization(old_name: str, new_name: str, db: Session = Depends(get_db)) -> models.Authorization:
+async def update_authorization(old_name: str, new_name: str, db: Session) -> models.Authorization:
     auth = db.query(models.Authorization).filter(models.Authorization.name == old_name).update({'name': new_name})
     db.commit()
-    db.refresh(auth)
     return auth
 
 
-async def delete_authorization(name: str, db: Session = Depends(get_db)) -> int:
+async def delete_authorization(name: str, db: Session) -> int:
     rows = db.query(models.Authorization).filter(models.Authorization.name == name).delete()
     db.commit()
     return rows
