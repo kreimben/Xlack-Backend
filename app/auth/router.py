@@ -1,13 +1,13 @@
-from fastapi import APIRouter, Request
+import json
+from fastapi import APIRouter, Request, Query
 from fastapi.responses import RedirectResponse
-from ..model.crud import user, authorization
 from ..utils.github_auth import exchange_code_for_access_token, get_user_data_from_github
 import os
 
 router = APIRouter(prefix='/auth', tags=['auth'])
 
 
-@router.get('/login')
+@router.get('/github_login')
 async def login_github():
     client_id = os.getenv('GITHUB_CLIENT_ID')
     scope = 'read:user'
