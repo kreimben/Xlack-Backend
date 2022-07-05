@@ -16,12 +16,11 @@ async def create_user(user_info: UserCreate,
         raise HTTPException(status_code=404, detail='No such authorization.')
 
     # If authorization exists, create user.
-    result = await user.create_user(
-        github_id=user_info.github_id,
-        email=user_info.email,
-        name=user_info.name,
-        authorization_name=user_info.authorization,
-        db=db)
+    result = await user.create_user(github_id=user_info.github_id,
+                                    email=user_info.email,
+                                    name=user_info.name,
+                                    authorization_name=user_info.authorization,
+                                    db=db)
 
     return {
         'success': True,
