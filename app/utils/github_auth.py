@@ -20,5 +20,7 @@ def exchange_code_for_access_token(code: str, redirect_uri: str | None = None):
 
 
 def get_user_data_from_github(access_token: str):
-    res = requests.get('https://api.github.com/user', auth=f'token {access_token}')
-    return res.json()
+    res = requests.get('https://api.github.com/user', headers={
+        'Authorization': f'token {access_token}'
+    })
+    return res
