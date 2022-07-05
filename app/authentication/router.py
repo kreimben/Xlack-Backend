@@ -4,7 +4,7 @@ from fastapi.responses import RedirectResponse
 from ..utils.github_auth import exchange_code_for_access_token, get_user_data_from_github
 import os
 
-router = APIRouter(prefix='/auth', tags=['auth'])
+router = APIRouter(prefix='/authentication', tags=['authentication'])
 
 
 @router.get('/github_login')
