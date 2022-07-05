@@ -3,6 +3,7 @@ from app.ready import ready_app
 import uvicorn
 from app.auth.router import router as auth_router
 from app.channel.router import router as channel_router
+from app.user.router import router as user_router
 import os
 
 
@@ -10,6 +11,7 @@ app: FastAPI = ready_app()
 
 app.include_router(auth_router)
 app.include_router(channel_router)
+app.include_router(user_router)
 
 if __name__ == '__main__':
     is_debugging = os.getenv('IS_DEBUGGING')
