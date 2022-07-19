@@ -64,7 +64,8 @@ async def show_cookie_or_token(websocket: WebSocket, cookie_or_token: str = Depe
 
 
 @router.websocket('/items')
-async def websocket_endpoint(websocket: WebSocket, chatter_id: int = ChatBase.chatter_id, query: Union[int, None] = None):
+async def websocket_endpoint(websocket: WebSocket, chatter_id: int,
+                             query: Union[int, None] = None):
     """
     If new window added new user start chat.
     If that window closed, new user left the chat.
