@@ -94,3 +94,5 @@ async def save_chat_content():
     file = open("chat_content.txt", "x")
     file.write("datetime" + "chatter" + "content" + "Channel" + "token")
     file.close()
+
+# TODO: pagination algorithm
