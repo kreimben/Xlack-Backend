@@ -3,7 +3,7 @@ from typing import Union, List
 from fastapi import Cookie, Depends, APIRouter, Query, WebSocket, status, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 
-from app.model.schemas import Chat
+from app.model.schemas import ChatBase
 
 router = APIRouter(prefix='/features/real_chat', tags=['RealChat'])
 
@@ -64,7 +64,7 @@ async def show_cookie_or_token(websocket: WebSocket, cookie_or_token: str = Depe
 
 
 @router.websocket('/items')
-async def websocket_endpoint(websocket: WebSocket, chatter=Chat.chatter_name, query: Union[int, None] = None):
+async def websocket_endpoint(websocket: WebSocket, chatter_id: int = ChatBase.chatter_id, query: Union[int, None] = None):
     """
     If new window added new user start chat.
     If that window closed, new user left the chat.
@@ -75,12 +75,12 @@ async def websocket_endpoint(websocket: WebSocket, chatter=Chat.chatter_name, qu
         while True:
             chat_db = await websocket.receive_text()
             await check.send_personal_chat(f"You:{chat_db}", websocket)
-            await check.broadcast(f"from client {chatter} chat: {chat_db}")
+            await check.broadcast(f"from client {chatter_id} chat: {chat_db}")
             if query is not None:
                 await websocket.send_text(f"Query parameter query: {query}")
     except WebSocketDisconnect:
         check.disconnect(websocket)
-        await check.broadcast(f"chatter {chatter} left this chat")
+        await check.broadcast(f"chatter {chatter_id} left this chat")
 
 
 # TODO: Complete this code with new logic
