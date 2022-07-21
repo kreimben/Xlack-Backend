@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Column, String, Integer, TIMESTAMP, func, ForeignKey
+from sqlalchemy import Column, String, Integer, TIMESTAMP, func, ForeignKey, LargeBinary
 from sqlalchemy_serializer import SerializerMixin
 
 from .database import Base
@@ -46,7 +46,7 @@ class Channel(Base, SerializerMixin):
 
     uuid = Column(String(50), unique=True, nullable=False, primary_key=True)
     channel_id = Column(Integer(), autoincrement=True, unique=True, nullable=False)
-    channel_name = Column(String(50))
+    channel_name = Column(String(50), unique=True, nullable=False)
     created_at = Column(TIMESTAMP(), default=func.now())
 
 
