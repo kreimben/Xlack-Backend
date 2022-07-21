@@ -1,8 +1,11 @@
 import logging
-
-from fastapi import APIRouter, Depends, Body
+import json
+import datetime
+from typing import Union, List
+from fastapi import APIRouter, Depends, Body, Cookie, Depends, APIRouter, Query, WebSocket, status, WebSocketDisconnect
 from sqlalchemy.orm import Session
 from starlette import status
+from fastapi.responses import HTMLResponse
 
 from app.errors.jwt_error import AccessTokenExpired, RefreshTokenExpired
 from app.model.crud.chat import create_chat, read_chat, read_chats, update_chat, delete_chat
@@ -10,8 +13,28 @@ from app.model.database import get_db
 from app.model.schemas import Chat, ChatCreate
 from app.utils.jwt import check_auth_using_token
 from app.utils.responses import FailureResponse, SuccessResponse
+from app.model.schemas import Channel
 
 router = APIRouter(prefix='/chat', tags=['chat'])
+
+
+class ConnectionCheck:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def send_personal_chat(self, chat: str, websocket: WebSocket):
+        await websocket.send_text(chat)
+
+    async def broadcast(self, chat: str):
+        for connection in self.active_connections:
+            await connection.send_text(chat)
 
 
 @router.post('/', response_model=Chat)
@@ -123,3 +146,82 @@ async def chat_delete(chat_id: int,
     logging.debug(f'deleted chat count: {rows}')
 
     return SuccessResponse(message='Successfully deleted.', count=rows)
+
+
+html = """
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Chat</title>
+    </head>
+</html>
+"""
+check = ConnectionCheck()
+
+
+@router.get('/features/real_chat')
+async def get_feature():
+    return HTMLResponse(html)
+
+
+async def get_cookie_or_token(
+        websocket: WebSocket,
+        session: Union[str, None] = Cookie(default=None),
+        token: Union[str, None] = Query(default=None),
+):
+    if session is None and token is None:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+    return session or token
+
+
+# endpoint to show chat's cookie or token
+@router.websocket('/features/real_chat/items')
+async def show_cookie_or_token(websocket: WebSocket, cookie_or_token: str = Depends(get_cookie_or_token)):
+    await websocket.accept()
+    while True:
+        await websocket.send_text(f"Session cookie : {cookie_or_token}")
+
+
+@router.websocket('/features/real_chat/items')
+async def websocket_endpoint(websocket: WebSocket, chatter_id: int,
+                             query: Union[int, None] = None):
+    """
+    If new window added new user start chat.
+    If that window closed, new user left the chat.
+    for any question, open issue and call me(@ryankimjh00)
+    """
+    await websocket.accept()
+    try:
+        while True:
+            chat_db = await websocket.receive_text()
+            await check.send_personal_chat(f"You:{chat_db}", websocket)
+            await check.broadcast(f"from client {chatter_id} chat: {chat_db}")
+            if query is not None:
+                await websocket.send_text(f"Query parameter query: {query}")
+    except WebSocketDisconnect:
+        check.disconnect(websocket)
+        await check.broadcast(f"chatter {chatter_id} left this chat")
+
+
+# TODO: Complete this code with new logic
+# FIXME: save chat history not in text file, in db
+@router.post('/features/real_chat/contents')
+async def save_chat_content(contents: json, db: Session = Depends(get_db)):
+    """
+    this method save chat history in text file.
+    for example, {2022-07-18 18:23:00 Hong-gil-dong how are you? Channel_01_Team-discipline sl1l30jjd921}
+    """
+    chatter = Chat.chatter_id
+    content = Chat.content
+    channel = Channel.channel_id
+    tokens = show_cookie_or_token()
+    contents = {'datetime': datetime,
+                'chatter': chatter,
+                'channel': channel,
+                'token': tokens}
+    # file = open("chat_content.txt", "x")
+    # file.write("datetime" + "chatter" + "content" + "Channel" + "token")
+    # file.close()
+    return contents
+
+# TODO: pagination algorithm
