@@ -58,3 +58,14 @@ class Chat(Base, SerializerMixin):
     content = Column(String(4000), nullable=False)
     chatter_id = Column(Integer(), ForeignKey('users.user_id'), nullable=False)
     created_at = Column(TIMESTAMP(), default=func.now(), nullable=False)
+    file_id = Column(Integer(), nullable=True)
+
+
+class File(Base, SerializerMixin):
+    __tablename__ = 'files'
+
+    uuid = Column(String(50), unique=True, nullable=False, primary_key=True)
+    file_id = Column(Integer(), autoincrement=True, unique=True, nullable=False)
+    file_name = Column(String(100), nullable=False, default=str(func.now()))
+    file_binary = Column(LargeBinary(), nullable=False)
+    created_at = Column(TIMESTAMP(), default=func.now(), nullable=False)
