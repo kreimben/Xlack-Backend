@@ -76,6 +76,7 @@ class ChatHistory(Base, SerializerMixin):
     __tablename__ = 'chat_history'
 
     uuid = Column(String(50), unique=True, nullable=False, primary_key=True)
+    history_id = Column(Integer(), autoincrement=True)
     channel_id = Column(Integer(), ForeignKey('channels.channel_id'), nullable=False)
     chat_id = Column(Integer(), ForeignKey('chats.chat_id'), nullable=True)
     file_id = Column(Integer(), ForeignKey('files.file_id'), nullable=True)
