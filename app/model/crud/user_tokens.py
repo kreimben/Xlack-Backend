@@ -5,9 +5,10 @@ from sqlalchemy.orm import Session
 from app.model import models
 
 
-async def create_user_tokens(db: Session, user_id: int, refresh_token: str) -> models.UserToken:
+async def create_user_tokens(db: Session, user_id: int, github_id: int, refresh_token: str) -> models.UserToken:
     user_token = models.UserToken(uuid=str(uuid.uuid4()),
                                   user_id=user_id,
+                                  github_id=github_id,
                                   refresh_token=refresh_token)
     db.add(user_token)
     db.commit()
