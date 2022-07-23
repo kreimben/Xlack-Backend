@@ -12,7 +12,7 @@ class User(Base, SerializerMixin):
     user_id = Column(Integer(), autoincrement=True, unique=True, primary_key=True, nullable=False)
     uuid = Column(String(50), unique=True, nullable=False)
 
-    github_id = Column(String(100), unique=True, nullable=True)
+    github_id = Column(Integer(), unique=True, nullable=True)
 
     email = Column(String(100), unique=True, nullable=True)
     name = Column(String(100), nullable=True)
@@ -29,8 +29,8 @@ class UserToken(Base, SerializerMixin):
     __tablename__ = 'user_tokens'
 
     uuid = Column(String(50), unique=True, nullable=False, primary_key=True)
-    user_id = Column(Integer(), ForeignKey('users.user_id'))
-    github_id = Column(Integer(), ForeignKey('users.github_id'))
+    user_id = Column(Integer(), ForeignKey('users.user_id'), unique=True, nullable=False)
+    github_id = Column(Integer(), ForeignKey('users.github_id'), unique=True, nullable=False)
     refresh_token = Column(String(1000), unique=True, nullable=True)
 
 
