@@ -152,3 +152,51 @@ class UserToken(Base, SerializerMixin):
     refresh_token = Column(String(1000), unique=True, nullable=True)
 
 """
+
+
+class File(BaseModel):
+    uuid: str
+    file_id: int
+    file_name: str
+    file_binary: bytes
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
+
+
+"""
+
+class File(Base, SerializerMixin):
+    __tablename__ = 'files'
+
+    uuid = Column(String(50), unique=True, nullable=False, primary_key=True)
+    file_id = Column(Integer(), autoincrement=True, unique=True, nullable=False)
+    file_name = Column(String(100), nullable=False, default=str(func.now()))
+    file_binary = Column(LargeBinary(), nullable=False)
+    created_at = Column(TIMESTAMP(), default=func.now(), nullable=False)
+
+"""
+
+
+class ChatHistory(BaseModel):
+    uuid: str
+    channel_id: int
+    chat_id: int
+    file_id: int
+
+    class Config:
+        orm_mode = True
+
+
+"""
+
+class ChatHistory(Base, SerializerMixin):
+    __tablename__ = 'chat_history'
+
+    uuid = Column(String(50), unique=True, nullable=False, primary_key=True)
+    channel_id = Column(Integer(), ForeignKey('channels.channel_id'), nullable=False)
+    chat_id = Column(Integer(), ForeignKey('chats.chat_id'), nullable=True)
+    file_id = Column(Integer(), ForeignKey('files.file_id'), nullable=True)
+
+"""
