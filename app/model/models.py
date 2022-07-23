@@ -58,8 +58,8 @@ class Chat(Base, SerializerMixin):
     chat_id = Column(Integer(), autoincrement=True, unique=True, nullable=False)
     content = Column(String(4000), nullable=False)
     chatter_id = Column(Integer(), ForeignKey('users.user_id'), nullable=False)
+    channel_id = Column(Integer(), autoincrement=True, unique=True, nullable=False)
     created_at = Column(TIMESTAMP(), default=func.now(), nullable=False)
-    file_id = Column(Integer(), nullable=True)
 
 
 class File(Base, SerializerMixin):
