@@ -39,12 +39,15 @@ async def create_user(db: Session,
 
 
 async def read_user(db: Session,
-                    user_id: int) -> models.User:
+                    user_id: int | None = None,
+                    github_id: int | None = None) -> models.User:
     """
     Return user data using one of parameter below.
     """
-    return db.query(models.User) \
-        .filter(models.User.user_id == user_id).first()
+    if github_id is not None:
+        return db.query(models.User).filter(models.User.github_id == github_id).first()
+    elif user_id is not None:
+        return db.query(models.User).filter(models.User.user_id == user_id).first()
 
 
 async def read_users(db: Session) -> [models.User]:
