@@ -10,7 +10,7 @@ This functions are not capable to authentication every actions.
 
 
 async def create_user(db: Session,
-                      github_id: str,
+                      github_id: int,
                       email: str,
                       name: str,
                       thumbnail_url: str | None = None,

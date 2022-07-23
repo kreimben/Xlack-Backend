@@ -1,7 +1,6 @@
 import logging
 from datetime import timedelta
 
-import sqlalchemy
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.params import Path
 from fastapi.responses import JSONResponse
@@ -10,8 +9,8 @@ from sqlalchemy.orm import Session
 from ..errors.jwt_error import RefreshTokenExpired, AccessTokenExpired
 from ..model.crud import authorization
 from ..model.crud.authorization import read_authorization
-from ..model.crud.user_tokens import create_user_tokens, update_user_tokens, delete_user_tokens
 from ..model.crud.user import read_users, read_user, update_user, delete_user, create_user
+from ..model.crud.user_tokens import create_user_tokens, delete_user_tokens
 from ..model.database import get_db
 from ..model.schemas import UserCreate, UserInformation
 from ..utils.jwt import issue_token, check_auth_using_token
@@ -50,7 +49,10 @@ async def user_create(user_info: UserCreate,
     refresh_token = issue_token(user_info=created_user.to_dict(), delta=timedelta(days=14))
 
     # And then, Update user info with `refresh_token`.
-    await create_user_tokens(db=db, user_id=created_user.user_id, refresh_token=refresh_token)
+    await create_user_tokens(db=db,
+                             user_id=created_user.user_id,
+                             github_id=created_user.github_id,
+                             refresh_token=refresh_token)
 
     return SuccessResponse(message='Successfully created user.',
                            user=created_user.to_dict(),
