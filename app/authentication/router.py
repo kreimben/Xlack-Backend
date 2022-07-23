@@ -9,11 +9,9 @@ from fastapi.responses import RedirectResponse
 from jwt import decode, ExpiredSignatureError
 from sqlalchemy.orm import Session
 from starlette import status
-from starlette.responses import JSONResponse
 
-from ..errors.jwt_error import AccessTokenExpired
-from ..model.crud.user_tokens import update_user_tokens
-from ..model.crud.user import update_user, read_user
+from ..model.crud.user import read_user
+from ..model.crud.user_tokens import update_user_tokens, read_user_tokens
 from ..model.database import get_db
 from ..utils.github_auth import exchange_code_for_access_token, get_user_data_from_github
 from ..utils.jwt import issue_token
@@ -107,53 +105,53 @@ async def revoke_token(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.post('/update/access_token')
-async def update_access_token(access_token: str = Body(...),
+async def update_access_token(refresh_token: str = Body(...),
                               db: Session = Depends(get_db)):
-    return await __issue_new_token(token=access_token, is_access_token=True, db=db)
-
-
-@router.post('/update/refresh_token')
-async def update_refresh_token(refresh_token: str = Body(...),
-                               db: Session = Depends(get_db)):
-    return await __issue_new_token(token=refresh_token, is_access_token=False, db=db)
-
-
-async def __issue_new_token(token: str = Body(...),
-                            is_access_token: bool = True,
-                            db: Session = Depends(get_db)):
-    """
-    Helper function that helps common logic
-    """
-
     # Check whether access token is expired first.
     try:
-        decode(token, key='secret_key', algorithms=['HS256'])
+        decode(refresh_token, key='secret_key', algorithms=['HS256'])
         return FailureResponse(message='You can this endpoint when only access token is expired.',
                                status_code=status.HTTP_403_FORBIDDEN)
     except ExpiredSignatureError:
+        # Surely, If the token is not expired, No reason to proceeds this function (logic).
         pass
 
     # Get payload from expired token.
-    payload = token.split(".")[1]
+    payload = refresh_token.split(".")[1]
     padded = payload + "=" * (4 - len(payload) % 4)
     decoded = base64.b64decode(padded)
     payload = json.loads(decoded)
-    print(f'payload: {payload}')
 
     # Issue a new thing.
     user = await read_user(db=db, user_id=payload['user_id'])
-    payload = {
-        'user_id': user.user_id,
-        'email': user.email,
-        'name': user.name,
-        'authorization': user.authorization,
-        'created_at': str(user.created_at),
-        'thumbnail_url': user.thumbnail_url
-    }  # This code is inevitable to convert to `dict` object. Fucking `datetime` is not json parsable.
-    token = issue_token(user_info=payload, delta=timedelta(hours=1) if is_access_token else timedelta(days=14))
+    token = issue_token(user_info=user.to_dict(), delta=timedelta(hours=1))
 
-    if is_access_token:
-        return SuccessResponse(message='Successfully re-issued access token.', token=token)
-    else:  # in case refresh token
-        await update_user_tokens(db=db, user_id=user.user_id, new_refresh_token=token)
-        return SuccessResponse(message='Successfully re-issued refresh token', token=token)
+    # await update_user_tokens(db=db, user_id=user.user_id, new_refresh_token=token)
+    return SuccessResponse(message='Successfully re-issued refresh token', token=token)
+
+
+@router.get('/user_check')
+async def check_user_by_github_id(github_id: int,
+                                  db: Session = Depends(get_db)):
+    user = await read_user(db=db, github_id=github_id)
+    if user:
+        return SuccessResponse(message='User exists. You don\'t need to register.', status_code=status.HTTP_200_OK)
+    else:
+        return FailureResponse(message='User doesn\'t exists. You have to register.',
+                               status_code=status.HTTP_404_NOT_FOUND)
+
+
+@router.post('/issue_tokens')
+async def issue_tokens(github_id: int,
+                       db: Session = Depends(get_db)):
+    user = await read_user(db=db, github_id=github_id)
+    if user:
+        token_info = await read_user_tokens(db=db, user_id=user.user_id)
+        access_token = issue_token(user.to_dict(), timedelta(hours=1))
+        refresh_token = token_info.refresh_token
+        return SuccessResponse(message='Successfully get new tokens',
+                               access_token=access_token,
+                               refresh_token=refresh_token)
+    else:
+        return FailureResponse(message='User doesn\'t exists. You have to register.',
+                               status_code=status.HTTP_404_NOT_FOUND)

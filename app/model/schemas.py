@@ -135,6 +135,7 @@ class UserTokenCreate(UserTokenBase):
 
 class UserToken(UserTokenCreate):
     uuid: str
+    github_id: int
 
     class Config:
         orm_mode = True
@@ -146,7 +147,8 @@ class UserToken(Base, SerializerMixin):
     __tablename__ = 'user_tokens'
 
     uuid = Column(String(50), unique=True, nullable=False, primary_key=True)
-    user_id = Column(Integer(), ForeignKey('users.user_id'), nullable=True, unique=True)
-    refresh_token = Column(String(1000), unique=True, nullable=False)
+    user_id = Column(Integer(), ForeignKey('users.user_id'))
+    github_id = Column(Integer(), ForeignKey('users.github_id'))
+    refresh_token = Column(String(1000), unique=True, nullable=True)
 
 """
