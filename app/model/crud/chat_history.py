@@ -7,8 +7,8 @@ from app.model import models
 
 
 async def create_history(db: Session, channel_id: int,
-                   chat_id: int | None = None,
-                   file_id: int | None = None) -> models.ChatHistory:
+                         chat_id: int | None = None,
+                         file_id: int | None = None) -> models.ChatHistory:
     history = models.ChatHistory(uuid=str(uuid.uuid4()),
                                  channel_id=channel_id,
                                  chat_id=chat_id,

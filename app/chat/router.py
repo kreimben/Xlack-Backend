@@ -7,7 +7,9 @@ from starlette import status
 
 from app.errors.jwt_error import AccessTokenExpired, RefreshTokenExpired
 from app.model.crud.chat import create_chat, read_chat, read_chats, update_chat, delete_chat
+from app.model.crud.chat_history import create_history
 from app.model.database import get_db
+from app.model.models import ChatHistory
 from app.model.schemas import Channel
 from app.model.schemas import Chat, ChatCreate
 from app.utils.jwt import check_auth_using_token
@@ -17,6 +19,7 @@ router = APIRouter(prefix='/chat', tags=['chat'])
 
 
 @router.post('/', response_model=Chat)
+@router.websocket('/')
 async def chat_create(chat: ChatCreate,
                       websocket: WebSocket,
                       chatter_id=Chat.chatter_id,
@@ -56,7 +59,6 @@ async def chat_create(chat: ChatCreate,
 
 
 @router.get('/', response_model=Chat)
-@router.websocket('/')
 async def chat_read(chat_id: int,
                     db: Session = Depends(get_db),
                     token_payload=Depends(check_auth_using_token)
@@ -189,35 +191,28 @@ async def show_cookie_or_token(websocket: WebSocket, tokens: str = Depends(check
         await websocket.send_text(f"Session cookie : {tokens}")
 
 
-# @router.websocket('/features/real_chat/items')
-# async def start_chat(websocket: WebSocket, chatter_id=Chat.chatter_id,
-#                      query: Union[int, None] = None):
-#     """
-#     If new window added new user start chat.
-#     If that window closed, new user left the chat.
-#     for any question, open issue and call me(@ryankimjh00)
-#     """
-#     await websocket.accept()
-#     try:
-#         while True:
-#             chat_db = await websocket.receive_text()
-#             await check.send_personal_chat(f"You:{chat_db}", websocket)
-#             await check.broadcast(f"from client {chatter_id} chat: {chat_db}")
-#             if query is not None:
-#                 await websocket.send_text(f"Query parameter query: {query}")
-#     except WebSocketDisconnect:
-#         check.disconnect(websocket)
-#         await check.broadcast(f"chatter {chatter_id} left this chat")
-
-
 # TODO: Complete this code with new logic
 # FIXME: save chat history not in text file, in db
-@router.post('/features/real_chat/contents')
-async def save_chat_content(db: Session = Depends(get_db)):
-    """
-    this method save chat history in text file.
-    for example, {2022-07-18 18:23:00 Hong-gil-dong how are you? Channel_01_Team-discipline sl1l30jjd921}
-    """
-    await create_chat(db=db, content=Chat.content, chatter_id=Chat.chatter_id, channel_id=Channel.channel_id)
+@router.post('/history')
+@router.websocket('/history')
+async def save_chat_content(file_id=ChatHistory.file_id,
+                            db: Session = Depends(get_db),
+                            token_payload=Depends(check_auth_using_token)):
+    logging.info('POST /chat/history')
+    # Check auth from dependency
+    if isinstance(token_payload, AccessTokenExpired) or isinstance(token_payload, RefreshTokenExpired):
+        logging.debug('One of tokens is expired.')
+        return FailureResponse(message=token_payload.detail, status_code=token_payload.status_code)
+
+    if token_payload['authorization'] == 'guest':
+        logging.debug('guest is going to create channel')
+        return FailureResponse(status_code=status.HTTP_401_UNAUTHORIZED,
+                               message='Guest can\'t read channel')
+    chat_history = await create_history(db,
+                                        channel_id=Channel.channel_id,
+                                        chat_id=Chat.chat_id,
+                                        file_id=file_id)
+    logging.debug(f'chat: {chat_history}')
+    return SuccessResponse(message='Successfully Saved Chat history', chat=chat_history.to_dict())
 
 # TODO: pagination algorithm
