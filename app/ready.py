@@ -11,6 +11,10 @@ import app.model.database as database
 def ready_for_cors(app: FastAPI) -> FastAPI:
     origins = [
         '*'
+        'localhost',
+        'http://localhost',
+        'localhost:3000',
+        'http://localhost:3000'
     ]
 
     app.add_middleware(
