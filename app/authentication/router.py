@@ -5,7 +5,6 @@ import os
 from datetime import timedelta
 
 from fastapi import APIRouter, Request, Query, Depends, Body
-from fastapi.responses import RedirectResponse
 from jwt import decode, ExpiredSignatureError
 from sqlalchemy.orm import Session
 from starlette import status
@@ -35,7 +34,7 @@ async def login_github():
     scope = 'read:user'
     url = f'https://github.com/login/oauth/authorize?client_id={client_id}&scope={scope}'
     logging.debug(f'url: {url}')
-    return RedirectResponse(url)
+    return SuccessResponse(url=url)
 
 
 @router.get('/redirect/github')
