@@ -65,7 +65,7 @@ async def redirect_github(request: Request, code: str):
     # return SuccessResponse(message='Successfully get access token from github.', access_token=access_token)
 
 
-@router.get('/user_info/github', deprecated=True)
+@router.get('/user_info/github')
 async def get_user_info(github_access_token: str = Query(
     alias='Access Token From Github.',
     title='github access token',
