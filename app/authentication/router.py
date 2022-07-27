@@ -61,7 +61,7 @@ async def redirect_github(request: Request, code: str):
 
     access_token = content.split('&')[0].split('=')[1]
 
-    return get_user_info(access_token)
+    return await get_user_info(access_token)
     # return SuccessResponse(message='Successfully get access token from github.', access_token=access_token)
 
 
