@@ -61,10 +61,11 @@ async def redirect_github(request: Request, code: str):
 
     access_token = content.split('&')[0].split('=')[1]
 
-    return SuccessResponse(message='Successfully get access token from github.', access_token=access_token)
+    return get_user_info(access_token)
+    # return SuccessResponse(message='Successfully get access token from github.', access_token=access_token)
 
 
-@router.get('/user_info/github')
+@router.get('/user_info/github', deprecated=True)
 async def get_user_info(github_access_token: str = Query(
     alias='Access Token From Github.',
     title='github access token',
