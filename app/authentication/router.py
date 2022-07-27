@@ -57,7 +57,7 @@ async def redirect_github(request: Request, code: str):
     # I know it's really messy way to deal with, But that's my best.
     first_word = content.split('&')[0].split('=')[0]
     if first_word == 'b\'error':
-        return FailureResponse(message=content.split('&')[1].split('=')[1])
+        return FailureResponse(message=content.split('&')[1].split('=')[1], status_code=401)
 
     access_token = content.split('&')[0].split('=')[1]
 
