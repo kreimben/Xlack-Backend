@@ -21,9 +21,6 @@ router = APIRouter(prefix='/chat', tags=['chat'])
 @router.post('/', response_model=Chat)
 @router.websocket('/')
 async def chat_create(chat: ChatCreate,
-                      websocket: WebSocket,
-                      chatter_id=Chat.chatter_id,
-                      query: Union[int, None] = None,
                       db: Session = Depends(get_db),
                       token_payload=Depends(check_auth_using_token)):
     logging.info('POST /chat/')
@@ -43,17 +40,6 @@ async def chat_create(chat: ChatCreate,
                                 chatter_id=chat.chatter_id,
                                 channel_id=Channel.channel_id)
     logging.debug(f'chat: {chat}')
-    await websocket.accept()
-    try:
-        while True:
-            chat_db = await websocket.receive_text()
-            await check.send_personal_chat(f"You:{chat_db}", websocket)
-            await check.broadcast(f"from client {chatter_id} chat: {chat_db}")
-            if query is not None:
-                await websocket.send_text(f"Query parameter query: {query}")
-    except WebSocketDisconnect:
-        check.disconnect(websocket)
-        await check.broadcast(f"chatter {chatter_id} left this chat")
 
     return SuccessResponse(message='Successfully Created Chat', chat=db_chat.to_dict())
 
@@ -168,9 +154,32 @@ class ConnectionCheck:
 check = ConnectionCheck()
 
 
-# @router.get('/features/real_chat')
-# async def get_feature():
-#     return HTMLResponse
+@router.websocket('/')
+async def websocket_chat(websocket: WebSocket,
+                         chatter_id=Chat.chatter_id,
+                         query: Union[int, None] = None,
+                         token_payload=Depends(check_auth_using_token)):
+    # Check auth from dependency
+    if isinstance(token_payload, AccessTokenExpired) or isinstance(token_payload, RefreshTokenExpired):
+        logging.debug('One of tokens is expired.')
+        return FailureResponse(message=token_payload.detail, status_code=token_payload.status_code)
+
+    if token_payload['authorization'] == 'guest':
+        logging.debug('guest is going to create channel')
+        return FailureResponse(status_code=status.HTTP_401_UNAUTHORIZED,
+                               message='Guest can\'t read channel')
+    await websocket.accept()
+    try:
+        while True:
+            chat_db = await websocket.receive_text()
+            await check.send_personal_chat(f"You:{chat_db}", websocket)
+            await check.broadcast(f"from client {chatter_id} chat: {chat_db}")
+            if query is not None:
+                await websocket.send_text(f"Query parameter query: {query}")
+
+    except WebSocketDisconnect:
+        check.disconnect(websocket)
+        await check.broadcast(f"chatter {chatter_id} left this chat")
 
 
 async def get_cookie_or_token(
