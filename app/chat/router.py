@@ -4,6 +4,7 @@ from typing import Union, List
 from fastapi import APIRouter, Body, Cookie, Depends, Query, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 from starlette import status
+from starlette.responses import HTMLResponse
 
 from app.errors.jwt_error import AccessTokenExpired, RefreshTokenExpired
 from app.model.crud.chat import create_chat, read_chat, read_chats, update_chat, delete_chat
@@ -19,7 +20,6 @@ router = APIRouter(prefix='/chat', tags=['chat'])
 
 
 @router.post('/', response_model=Chat)
-@router.websocket('/')
 async def chat_create(chat: ChatCreate,
                       db: Session = Depends(get_db),
                       token_payload=Depends(check_auth_using_token)):
@@ -143,22 +143,61 @@ class ConnectionCheck:
     def disconnect(self, websocket: WebSocket):
         self.active_connections.remove(websocket)
 
-    async def send_personal_chat(self, chat: str, websocket: WebSocket):
-        await websocket.send_text(chat)
+    async def send_personal_message(self, message: str, websocket: WebSocket):
+        await websocket.send_text(message)
 
-    async def broadcast(self, chat: str):
+    async def broadcast(self, message: str):
         for connection in self.active_connections:
-            await connection.send_text(chat)
+            await connection.send_text(message)
 
 
 check = ConnectionCheck()
 
+html = """
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Chat</title>
+    </head>
+    <body>
+        <h1>WebSocket Chat</h1>
+        <h2>Your ID: <span id="ws-id"></span></h2>
+        <form action="" onsubmit="sendMessage(event)">
+            <input type="text" id="messageText" autocomplete="off"/>
+            <button>Send</button>
+        </form>
+        <ul id='messages'>
+        </ul>
+        <script>
+            var client_id = Date.now()
+            document.querySelector("#ws-id").textContent = client_id;
+            var ws = new WebSocket(`ws://localhost:8000/ws/${client_id}`);
+            ws.onmessage = function(event) {
+                var messages = document.getElementById('messages')
+                var message = document.createElement('li')
+                var content = document.createTextNode(event.data)
+                message.appendChild(content)
+                messages.appendChild(message)
+            };
+            function sendMessage(event) {
+                var input = document.getElementById("messageText")
+                ws.send(input.value)
+                input.value = ''
+                event.preventDefault()
+            }
+        </script>
+    </body>
+</html>
+"""
 
-@router.websocket('/')
-async def websocket_chat(websocket: WebSocket,
-                         chatter_id=Chat.chatter_id,
-                         query: Union[int, None] = None,
-                         token_payload=Depends(check_auth_using_token)):
+
+@router.get("/")
+async def get():
+    return HTMLResponse(html)
+
+
+@router.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket, user_id: int, token_payload=Depends(check_auth_using_token)):
     # Check auth from dependency
     if isinstance(token_payload, AccessTokenExpired) or isinstance(token_payload, RefreshTokenExpired):
         logging.debug('One of tokens is expired.')
@@ -168,18 +207,15 @@ async def websocket_chat(websocket: WebSocket,
         logging.debug('guest is going to create channel')
         return FailureResponse(status_code=status.HTTP_401_UNAUTHORIZED,
                                message='Guest can\'t read channel')
-    await websocket.accept()
+    await check.connect(websocket)
     try:
         while True:
             chat_db = await websocket.receive_text()
-            await check.send_personal_chat(f"You:{chat_db}", websocket)
-            await check.broadcast(f"from client {chatter_id} chat: {chat_db}")
-            if query is not None:
-                await websocket.send_text(f"Query parameter query: {query}")
-
+            await check.send_personal_message(f"You wrote: {chat_db}", websocket)
+            await check.broadcast(f"Client #{user_id} says: {chat_db}")
     except WebSocketDisconnect:
         check.disconnect(websocket)
-        await check.broadcast(f"chatter {chatter_id} left this chat")
+        await check.broadcast(f"Client #{user_id} left the chat")
 
 
 async def get_cookie_or_token(
