@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Column, String, Integer, TIMESTAMP, func, ForeignKey
+from sqlalchemy import Column, String, Integer, TIMESTAMP, func, ForeignKey, LargeBinary
 from sqlalchemy_serializer import SerializerMixin
 
 from .database import Base
@@ -47,7 +47,7 @@ class Channel(Base, SerializerMixin):
 
     uuid = Column(String(50), unique=True, nullable=False, primary_key=True)
     channel_id = Column(Integer(), autoincrement=True, unique=True, nullable=False)
-    channel_name = Column(String(50))
+    channel_name = Column(String(50), unique=True, nullable=False)
     created_at = Column(TIMESTAMP(), default=func.now())
 
 
@@ -58,4 +58,25 @@ class Chat(Base, SerializerMixin):
     chat_id = Column(Integer(), autoincrement=True, unique=True, nullable=False)
     content = Column(String(4000), nullable=False)
     chatter_id = Column(Integer(), ForeignKey('users.user_id'), nullable=False)
+    channel_id = Column(Integer(), autoincrement=True, unique=True, nullable=False)
     created_at = Column(TIMESTAMP(), default=func.now(), nullable=False)
+
+
+class File(Base, SerializerMixin):
+    __tablename__ = 'files'
+
+    uuid = Column(String(50), unique=True, nullable=False, primary_key=True)
+    file_id = Column(Integer(), autoincrement=True, unique=True, nullable=False)
+    file_name = Column(String(100), nullable=False, default=str(func.now()))
+    file_binary = Column(LargeBinary(), nullable=False)
+    created_at = Column(TIMESTAMP(), default=func.now(), nullable=False)
+
+
+class ChatHistory(Base, SerializerMixin):
+    __tablename__ = 'chat_history'
+
+    uuid = Column(String(50), unique=True, nullable=False, primary_key=True)
+    history_id = Column(Integer(), autoincrement=True)
+    channel_id = Column(Integer(), ForeignKey('channels.channel_id'), nullable=False)
+    chat_id = Column(Integer(), ForeignKey('chats.chat_id'), nullable=True)
+    file_id = Column(Integer(), ForeignKey('files.file_id'), nullable=True)
