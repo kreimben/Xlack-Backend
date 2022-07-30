@@ -10,7 +10,7 @@ load_dotenv()
 # NEVER (x100) password should be opened to internet!!!!
 __id = os.getenv('MARIADB_USER_ID')
 __pw = os.getenv('MARIADB_USER_PASSWORD')
-__host = os.getenv('MARIADB_HOST')
+__host = os.getenv('MARIADB_HOST', 'localhost')
 __port = os.getenv('MARIADB_PORT')
 __db = os.getenv('MARIADB_DB')
 # SQLALCHEMY_DATABASE_URL = URL('mariadb+pymysql',
