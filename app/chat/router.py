@@ -1,6 +1,7 @@
 import logging
 from typing import Union, List
 
+import uvicorn
 from fastapi import APIRouter, Body, Cookie, Depends, Query, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 from starlette import status
@@ -21,6 +22,8 @@ router = APIRouter(prefix='/chat', tags=['chat'])
 
 @router.post('/', response_model=Chat)
 async def chat_create(chat: ChatCreate,
+                      websocket: WebSocket,
+                      user_id: int,
                       db: Session = Depends(get_db),
                       token_payload=Depends(check_auth_using_token)):
     logging.info('POST /chat/')
@@ -34,12 +37,23 @@ async def chat_create(chat: ChatCreate,
         logging.debug('guest is going to create channel')
         return FailureResponse(status_code=status.HTTP_401_UNAUTHORIZED,
                                message='Guest can\'t read channel')
-    # websocket chat start
+    # websocket chat code start
     db_chat = await create_chat(db=db,
                                 content=chat.content,
                                 chatter_id=chat.chatter_id,
                                 channel_id=Channel.channel_id)
     logging.debug(f'chat: {chat}')
+
+    await check.connect(websocket)
+    try:
+        while True:
+            chat_ws = await websocket.receive_text()
+            await check.send_personal_message(f"You: {chat_ws}", websocket)
+            await check.broadcast(f"Client #{user_id}: {chat_ws}")
+    except WebSocketDisconnect:
+        check.disconnect(websocket)
+        await check.broadcast(f"Client #{user_id} left the chat")
+        # websocket chat code end
 
     return SuccessResponse(message='Successfully Created Chat', chat=db_chat.to_dict())
 
@@ -196,26 +210,27 @@ async def get():
     return HTMLResponse(html)
 
 
-@router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket, user_id: int, token_payload=Depends(check_auth_using_token)):
-    # Check auth from dependency
-    if isinstance(token_payload, AccessTokenExpired) or isinstance(token_payload, RefreshTokenExpired):
-        logging.debug('One of tokens is expired.')
-        return FailureResponse(message=token_payload.detail, status_code=token_payload.status_code)
-
-    if token_payload['authorization'] == 'guest':
-        logging.debug('guest is going to create channel')
-        return FailureResponse(status_code=status.HTTP_401_UNAUTHORIZED,
-                               message='Guest can\'t read channel')
-    await check.connect(websocket)
-    try:
-        while True:
-            chat_db = await websocket.receive_text()
-            await check.send_personal_message(f"You wrote: {chat_db}", websocket)
-            await check.broadcast(f"Client #{user_id} says: {chat_db}")
-    except WebSocketDisconnect:
-        check.disconnect(websocket)
-        await check.broadcast(f"Client #{user_id} left the chat")
+#
+# @router.websocket("/websocket")
+# async def websocket_endpoint(websocket: WebSocket, user_id: int, token_payload=Depends(check_auth_using_token)):
+#     # Check auth from dependency
+#     if isinstance(token_payload, AccessTokenExpired) or isinstance(token_payload, RefreshTokenExpired):
+#         logging.debug('One of tokens is expired.')
+#         return FailureResponse(message=token_payload.detail, status_code=token_payload.status_code)
+#
+#     if token_payload['authorization'] == 'guest':
+#         logging.debug('guest is going to create channel')
+#         return FailureResponse(status_code=status.HTTP_401_UNAUTHORIZED,
+#                                message='Guest can\'t read channel')
+#     await check.connect(websocket)
+#     try:
+#         while True:
+#             chat_db = await websocket.receive_text()
+#             await check.send_personal_message(f"You: {chat_db}", websocket)
+#             await check.broadcast(f"Client #{user_id}: {chat_db}")
+#     except WebSocketDisconnect:
+#         check.disconnect(websocket)
+#         await check.broadcast(f"Client #{user_id} left the chat")
 
 
 async def get_cookie_or_token(
@@ -230,16 +245,15 @@ async def get_cookie_or_token(
 
 # endpoint to show chat's cookie or token
 @router.websocket('/features/real_chat/items')
+# @router.get('/features/real_chat/items')
 async def show_cookie_or_token(websocket: WebSocket, tokens: str = Depends(check_auth_using_token)):
     await websocket.accept()
     while True:
         await websocket.send_text(f"Session cookie : {tokens}")
 
 
-# TODO: Complete this code with new logic
-# FIXME: save chat history not in text file, in db
-@router.post('/history')
 @router.websocket('/history')
+# @router.get('/history')
 async def save_chat_content(file_id=ChatHistory.file_id,
                             db: Session = Depends(get_db),
                             token_payload=Depends(check_auth_using_token)):
@@ -260,4 +274,6 @@ async def save_chat_content(file_id=ChatHistory.file_id,
     logging.debug(f'chat: {chat_history}')
     return SuccessResponse(message='Successfully Saved Chat history', chat=chat_history.to_dict())
 
-# TODO: pagination algorithm
+
+if __name__ == "__main__":
+    uvicorn.run(router, host="127.0.0.1", port=8080)
