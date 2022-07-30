@@ -238,7 +238,7 @@ async def show_cookie_or_token(websocket: WebSocket, tokens: str = Depends(check
 
 # TODO: Complete this code with new logic
 # FIXME: save chat history not in text file, in db
-@router.post('/history')
+# @router.post('/history')
 @router.websocket('/history')
 async def save_chat_content(file_id=ChatHistory.file_id,
                             db: Session = Depends(get_db),
