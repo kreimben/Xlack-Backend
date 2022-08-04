@@ -1,9 +1,8 @@
-fastapi
-uvicorn
-pyjwt
-pydantic
-sqlalchemy
-PyMySQL
+django
 python-dotenv
-requests
-SQLAlchemy-serializer
+mysqlclient
+daphne
+Twisted[tls,http2]
+djangorestframework
+django-filter
+markdown
