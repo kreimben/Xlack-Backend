@@ -45,7 +45,7 @@ CSRF_TRUSTED_ORIGINS = ['https://xlack.kreimben.com']
 INSTALLED_APPS = [
     # Apps we made.
     'chat',
-    'channel',
+    'chat_channel',
 
     # Apps we installed.
     'rest_framework',
