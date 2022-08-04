@@ -6,3 +6,4 @@ Twisted[tls,http2]
 djangorestframework
 django-filter
 markdown
+drf-yasg[validation]
