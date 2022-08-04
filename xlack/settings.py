@@ -49,6 +49,7 @@ INSTALLED_APPS = [
 
     # Apps we installed.
     'rest_framework',
+    'drf_yasg',
 
     # Django Native App.
     'django.contrib.admin',
