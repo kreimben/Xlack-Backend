@@ -39,7 +39,7 @@ async def channel_create(channel: ChannelCreate,
 
 
 @router.get('/{channel_id}', response_model=Channel)
-async def channel_read_by_name(channel_id: str,
+async def channel_read_by_name(channel_id: int,
                                db: Session = Depends(get_db),
                                token_payload=Depends(check_auth_using_token)):
     logging.info('GET /channel/')
