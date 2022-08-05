@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     # Apps we made.
     'chat',
     'chat_channel',
+    'user_custom',
 
     # Apps we installed.
     'rest_framework',
