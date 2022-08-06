@@ -7,3 +7,5 @@ djangorestframework
 django-filter
 markdown
 drf-yasg[validation]
+channels
+ujson
