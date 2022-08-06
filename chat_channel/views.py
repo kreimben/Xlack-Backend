@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, permissions
 
 from chat_channel.models import ChatChannel
 from chat_channel.serializers import ChatChannelSerializer
