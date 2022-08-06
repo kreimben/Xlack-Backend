@@ -35,7 +35,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path(os.getenv('DJANGO_REAL_ADMIN_URI'), admin.site.urls),
-    path('', include('rest_framework.urls', namespace='rest_framework')),
+    path('accounts/', include('rest_framework.urls', namespace='rest_framework')),
     path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='swagger_documentation'),
 
     path('channel/', include('chat_channel.urls')),
