@@ -2,6 +2,7 @@ import ujson
 
 from channels.generic.websocket import WebsocketConsumer
 
+class ChatConsumer(JsonWebsocketConsumer):
 
 class ChatConsumer(WebsocketConsumer):
 
