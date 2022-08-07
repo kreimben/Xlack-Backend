@@ -9,3 +9,4 @@ markdown
 drf-yasg[validation]
 channels
 ujson
+channels_redis
