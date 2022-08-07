@@ -30,7 +30,17 @@ class ChatConsumer(JsonWebsocketConsumer):
             }
         )
 
-        await self.channel_layer.group_send(
+    def speak(self, event):
+        """
+        This function speaks message to every body in this group.
+        """
+        self.send_json({
+            'user': event['user'],
+            'message': event['message']
+        })
+
+    def disconnect(self, code):
+        async_to_sync(self.channel_layer.group_discard)(
             self.room_group_name,
             ujson.dumps({
                 'message': message
