@@ -40,4 +40,5 @@ urlpatterns = [
 
     path('channel/', include('chat_channel.urls')),
     path('chat/', include('chat.urls')),
+    path('ws/chat/', include('chat.routing'))
 ]
