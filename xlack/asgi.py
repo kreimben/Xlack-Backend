@@ -23,6 +23,7 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 import chat.routing
 
 application = ProtocolTypeRouter({
+    # Http doesn't need to be here. (Django automatically included it.)
     'websocket': AuthMiddlewareStack(
         URLRouter(
             chat.routing.urlpatterns
