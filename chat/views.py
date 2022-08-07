@@ -8,5 +8,5 @@ from chat.serializers import ChatSerializer
 class ChatViewSet(ModelViewSet):
     queryset = Chat.objects.all()
     serializer_class = ChatSerializer
-    http_method_names = ['post', 'delete']
+    http_method_names = ['get']
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
