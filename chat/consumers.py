@@ -15,9 +15,20 @@ class ChatConsumer(JsonWebsocketConsumer):
         )
         self.accept()
 
-    async def receive(self, text_data=None, bytes_data=None):
-        text_data_json = ujson.loads(text_data)
-        message = text_data_json['message']
+    def receive_json(self, content, **kwargs):
+        """
+        This function JUST receive messages.
+        After that, You should send message to group.
+        """
+        print(f'content type: {type(content)}')
+        async_to_sync(self.channel_layer.group_send)(
+            self.room_group_name,
+            {
+                'type': 'speak',
+                'user': self.scope['user'].username,
+                'message': content['message']
+            }
+        )
 
         await self.channel_layer.group_send(
             self.room_group_name,
