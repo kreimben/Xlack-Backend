@@ -4,7 +4,10 @@ from channels.generic.websocket import WebsocketConsumer
 
 class ChatConsumer(JsonWebsocketConsumer):
 
-class ChatConsumer(WebsocketConsumer):
+    def connect(self):
+        self.channel_id = self.scope['url_route']['kwargs']['channel_id']
+        print(f'channel_id: {self.channel_id}')
+        self.room_group_name = f'chat_{self.channel_id}'
 
     async def connect(self):
         self.accept()
