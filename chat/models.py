@@ -5,9 +5,9 @@ from chat_channel.models import ChatChannel
 
 
 class Chat(models.Model):
-    content = models.TextField(null=False, blank=False)
-    chatter_id = models.ForeignKey(User, on_delete=models.PROTECT, default=1, blank=False)
-    channel_id = models.ForeignKey(ChatChannel, on_delete=models.CASCADE, null=False, blank=False)
+    message = models.TextField(null=False, blank=False)
+    chatter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, default=1, blank=False)
+    channel = models.ForeignKey(ChatChannel, on_delete=models.CASCADE, null=False, blank=False, related_name='chat')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -17,4 +17,4 @@ class Chat(models.Model):
         ordering = ['created_at']
 
     def __str__(self):
-        return f'{self.channel_id} : {self.content}'
+        return f'{self.channel} 채널의 {self.message}'
