@@ -18,6 +18,12 @@ class ChatConsumer(JsonWebsocketConsumer):
             self.channel_name
         )
         self.accept()
+        # Send chat history to user.
+        chats = [{'id': chat.id, 'chatter_id': chat.chatter.id, 'message': chat.message} for chat in
+                 Chat.objects.filter(channel=self.channel_id)]
+        self.send_json(
+            chats
+        )
 
     def receive_json(self, content, **kwargs):
         """
