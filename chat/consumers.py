@@ -30,7 +30,11 @@ class ChatConsumer(JsonWebsocketConsumer):
         This function JUST receive messages.
         After that, You should send message to group.
         """
-        print(f'content type: {type(content)}')
+        user = User.objects.get(id=3)  # TODO: Fix this 3 to real user id.
+        channel = ChatChannel.objects.get(id=self.channel_id)
+        chat = Chat(message=content['message'], chatter=user, channel=channel)
+        chat.save()
+
         async_to_sync(self.channel_layer.group_send)(
             self.room_group_name,
             {
