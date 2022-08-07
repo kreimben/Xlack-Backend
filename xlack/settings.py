@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     # Apps we installed.
     'rest_framework',
     'drf_yasg',
+    'channels',
 
     # Django Native App.
     'django.contrib.admin',
@@ -103,6 +104,15 @@ DATABASES = {
         'HOST': os.getenv('DB_HOST'),
         'PORT': os.getenv('DB_PORT')
     }
+}
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [(os.getenv('DB_HOST'), os.getenv('REDIS_PORT'))],
+        },
+    },
 }
 
 # Password validation
