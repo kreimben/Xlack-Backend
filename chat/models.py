@@ -9,7 +9,6 @@ class Chat(models.Model):
     chatter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, default=1, blank=False)
     channel = models.ForeignKey(ChatChannel, on_delete=models.CASCADE, null=False, blank=False, related_name='chat')
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = 'Chat'
