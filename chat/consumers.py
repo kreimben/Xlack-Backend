@@ -1,9 +1,13 @@
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import JsonWebsocketConsumer
+from django.contrib.auth.models import User
+
+from chat.models import Chat
+from chat_channel.models import ChatChannel
 
 
-# TODO: Implement auth jobs for JWT.
 class ChatConsumer(JsonWebsocketConsumer):
+    # TODO: Implement auth jobs for JWT.
     def connect(self):
         self.channel_id = self.scope['url_route']['kwargs']['channel_id']
         print(f'channel_id: {self.channel_id}')
