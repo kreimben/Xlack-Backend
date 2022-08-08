@@ -61,24 +61,24 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # dr auth
+
+    # django rest framework
+    'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
+    # dj-rest-auth
     'dj_rest_auth',
     'dj_rest_auth.registration',
-
     # django-allauth
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-
-    # social login
+    'allauth.socialaccount.providers.kakao',
     'allauth.socialaccount.providers.github',
-
-    'rest_framework',
-    'rest_framework.authtoken'
+    'allauth.socialaccount.providers.google',
 
 ]
-AUTH_USER_MODEL = 'user_custom.CustomUser'
-
+AUTH_USER_MODEL = 'user_custom.User'
+REST_AUTH_TOKEN_MODEL = None
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -175,16 +175,10 @@ REST_FRAMEWORK = {
 
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
-ACCOUNT_CONFIRM_EMAIL_ON_GET = True
-ACCOUNT_EMAIL_CONFIRMATION_ANONYMOUS_REDIRECT_URL = '/?verification=1'
-ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = '/?verification=1'
 
-SITE_ID = 1
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+REST_USE_JWT = True
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=2),
@@ -193,6 +187,3 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
 }
 
-REST_AUTH_SERIALIZERS = {
-    'USER_DETAILS_SERIALIZER': 'users.serializers.UserSerializer',
-}

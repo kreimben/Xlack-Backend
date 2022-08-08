@@ -38,8 +38,8 @@ urlpatterns = [
     path(os.getenv('DJANGO_REAL_ADMIN_URI'), admin.site.urls),
     path('', include('rest_framework.urls', namespace='rest_framework')),
     path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='swagger_documentation'),
-    path('github/login/', views.github_login, name='github_login'),
-    path('github/callback/', views.github_callback, name='github_callback'),
-    path('github/login/finish/', views.GithubLogin.as_view(), name='github_login_todjango'),
+    path('user_custom/', include('dj_rest_auth.urls')),
+    path('user_custom/', include('allauth.urls')),
+    path('user_custom/', include('user_custom.urls')),
     path('channel/', include('chat_channel.urls')),
 ]

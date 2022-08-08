@@ -13,9 +13,9 @@ from allauth.socialaccount.models import SocialAccount
 from .models import User
 
 BASE_URL = 'http://localhost:8000/'
-GITHUB_CALLBACK_URI = BASE_URL + 'accounts/github/callback/'
+GITHUB_CALLBACK_URI = BASE_URL + 'user_custom/github/callback/'
 
-state = getattr(settings, 'STATE')
+state = getattr(settings, 'STATE', True)
 
 
 def github_login(request):
@@ -26,8 +26,8 @@ def github_login(request):
 
 
 def github_callback(request):
-    client_id = getattr(settings, 'SOCIAL_AUTH_GITHUB_CLIENT_ID')
-    client_secret = getattr(settings, 'SOCIAL_AUTH_GITHUB_SECRET')
+    client_id = getattr(settings, 'SOCIAL_AUTH_GITHUB_CLIENT_ID', True)
+    client_secret = getattr(settings, 'SOCIAL_AUTH_GITHUB_SECRET', True)
     code = request.GET.get('code')
     """
     Access Token Request
