@@ -18,7 +18,6 @@ import os
 from django.contrib import admin
 from django.urls import path, include
 from drf_yasg import openapi
-from user_custom import views
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
@@ -36,10 +35,14 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path(os.getenv('DJANGO_REAL_ADMIN_URI'), admin.site.urls),
-    path('', include('rest_framework.urls', namespace='rest_framework')),
+    path('accounts/', include('rest_framework.urls', namespace='rest_framework')),
     path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='swagger_documentation'),
+
+    path('channel/', include('chat_channel.urls')),
+    path('chat/', include('chat.urls')),
+    path('ws/chat/', include('chat.routing')),
+    
     path('user_custom/', include('dj_rest_auth.urls')),
     path('user_custom/', include('allauth.urls')),
     path('user_custom/', include('user_custom.urls')),
-    path('channel/', include('chat_channel.urls')),
 ]
