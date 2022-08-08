@@ -40,5 +40,9 @@ urlpatterns = [
 
     path('channel/', include('chat_channel.urls')),
     path('chat/', include('chat.urls')),
-    path('ws/chat/', include('chat.routing'))
+    path('ws/chat/', include('chat.routing')),
+    
+    path('user_custom/', include('dj_rest_auth.urls')),
+    path('user_custom/', include('allauth.urls')),
+    path('user_custom/', include('user_custom.urls')),
 ]
