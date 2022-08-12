@@ -6,4 +6,11 @@ Twisted[tls,http2]
 djangorestframework
 django-filter
 markdown
+requests
 drf-yasg[validation]
+channels
+ujson
+channels_redis
+djangorestframework-simplejwt[crypto]
+dj-rest-auth[with_social]
+django-allauth
