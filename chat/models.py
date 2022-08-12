@@ -6,7 +6,7 @@ from chat_channel.models import ChatChannel
 
 class Chat(models.Model):
     message = models.TextField(null=False, blank=False)
-    chatter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, default=1, blank=False)
+    chatter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=False)
     channel = models.ForeignKey(ChatChannel, on_delete=models.CASCADE, null=False, blank=False, related_name='chat')
     created_at = models.DateTimeField(auto_now_add=True)
 
