@@ -8,4 +8,4 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
     permission_classes = []
-    http_method_names = ['get', 'post', 'patch', 'delete']
+    http_method_names = ['get']
