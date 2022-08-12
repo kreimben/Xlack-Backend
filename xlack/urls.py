@@ -35,14 +35,21 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path(os.getenv('DJANGO_REAL_ADMIN_URI'), admin.site.urls),
+
+    # Normal Login.
     path('accounts/', include('rest_framework.urls', namespace='rest_framework')),
+
+    # For OAuth2 Login and Registrations.
+    path('accounts/', include('dj_rest_auth.urls')),
+    path('accounts/', include('allauth.urls')),
+
+    # Swagger Documentation.
     path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='swagger_documentation'),
 
     path('channel/', include('chat_channel.urls')),
     path('chat/', include('chat.urls')),
+    path('profile/', include('user_profile.urls')),
     path('ws/chat/', include('chat.routing')),
-    
-    path('user_custom/', include('dj_rest_auth.urls')),
-    path('user_custom/', include('allauth.urls')),
-    path('user_custom/', include('user_custom.urls')),
+
+    path('token/', include('oauth2_token.urls')),
 ]

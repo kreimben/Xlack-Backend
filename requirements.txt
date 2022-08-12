@@ -11,5 +11,6 @@ drf-yasg[validation]
 channels
 ujson
 channels_redis
-django-rest-auth
+djangorestframework-simplejwt[crypto]
+dj-rest-auth[with_social]
 django-allauth
