@@ -4,6 +4,6 @@ from user_profile import views
 
 router = DefaultRouter()
 
-router.register('', views.UserProfileViewSet)
+router.register('', views.UserProfileViewSet, basename='UserProfile')
 
 urlpatterns = router.urls
