@@ -1,9 +1,7 @@
-from rest_framework import routers
+from django.urls import path
 
 from chat import views
 
-router = routers.DefaultRouter()
-
-router.register('', views.ChatViewSet)
-
-urlpatterns = router.urls
+urlpatterns = [
+    path('<int:channel_id>/', views.ChatView.as_view())
+]
