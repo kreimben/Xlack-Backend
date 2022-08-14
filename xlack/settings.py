@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 import os
 from datetime import timedelta
 from pathlib import Path
-
+import django_heroku
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -29,7 +29,8 @@ SECRET_KEY = os.getenv('DJANGO_SECRET')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DJANGO_DEBUG', False)
 
-ALLOWED_HOSTS = ['*']
+# ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['127.0.0.1', '.herokuapp.com']
 
 # https://docs.djangoproject.com/en/4.0/ref/settings/#use-x-forwarded-host
 USE_X_FORWARDED_HOST = True
@@ -81,6 +82,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+
 ]
 
 ROOT_URLCONF = 'xlack.urls'
@@ -238,3 +241,4 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 1024  # https://stackoverflow.com/a/54539084/10684515
+django_heroku.settings(locals())
