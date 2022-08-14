@@ -39,7 +39,7 @@ CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 
 # https://docs.djangoproject.com/en/4.0/ref/settings/#std-setting-CSRF_TRUSTED_ORIGINS
-CSRF_TRUSTED_ORIGINS = ['https://*.kreimben.com']
+CSRF_TRUSTED_ORIGINS = ['*']
 
 # Application definition
 

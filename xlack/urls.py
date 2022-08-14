@@ -15,6 +15,8 @@ Including another URLconf
 """
 import os
 
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 from drf_yasg import openapi
@@ -53,3 +55,5 @@ urlpatterns = [
 
     path('token/', include('oauth2_token.urls')),
 ]
+
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
