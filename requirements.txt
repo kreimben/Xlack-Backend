@@ -1,8 +1,6 @@
 django
 python-dotenv
 mysqlclient
-daphne
-Twisted[tls,http2]
 djangorestframework
 django-filter
 markdown
@@ -14,3 +12,8 @@ channels_redis
 djangorestframework-simplejwt[crypto]
 dj-rest-auth[with_social]
 django-allauth
+uvicorn[standard]
+gunicorn
+daphne
+whitenoise
+django-cors-headers

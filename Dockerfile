@@ -6,6 +6,8 @@ COPY . /app
 
 RUN pip install -r requirements.txt
 
-EXPOSE 10131
+EXPOSE 8000
 
-CMD ["python3", "main.py"]
+#CMD ["gunicorn", "xlack.asgi:application", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0", "-p", "8000"]
+#CMD ["gunicorn", "xlack.wsgi"]
+CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "xlack.asgi:application"]

@@ -27,7 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('DJANGO_SECRET')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DJANGO_DEBUG')
+DEBUG = os.getenv('DJANGO_DEBUG', False)
 
 ALLOWED_HOSTS = ['*']
 
@@ -39,7 +39,10 @@ CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 
 # https://docs.djangoproject.com/en/4.0/ref/settings/#std-setting-CSRF_TRUSTED_ORIGINS
-CSRF_TRUSTED_ORIGINS = ['https://xlack.kreimben.com']
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.kreimben.com',
+    'https://xlack-backend.herokuapp.com'
+]
 
 # Application definition
 
@@ -63,6 +66,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.github',
     'dj_rest_auth',
     'dj_rest_auth.registration',
+    'corsheaders',
 
     # Django Native App.
     'django.contrib.admin',
@@ -81,6 +85,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'xlack.urls'
@@ -153,6 +160,7 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.BasicAuthentication'
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -235,3 +243,12 @@ SOCIALACCOUNT_PROVIDERS = {
         ]
     }
 }
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 1024  # https://stackoverflow.com/a/54539084/10684515
+
+CORS_ORIGIN_WHITELIST = (
+    'http://localhost:3000',
+    'https://xlack.kreimben.com'
+)
+
+CORS_ALLOW_CREDENTIALS = True

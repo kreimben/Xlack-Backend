@@ -15,6 +15,8 @@ Including another URLconf
 """
 import os
 
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 from drf_yasg import openapi
@@ -24,13 +26,13 @@ from rest_framework import permissions
 schema_view = get_schema_view(
     openapi.Info(
         title="Xlack",
-        default_version='0.1.0',
+        default_version='2.0.0',
         description="Xlack Backend API Documentation.",
         contact=openapi.Contact(email="aksidion@kreimben.com"),
         license=openapi.License(name="MIT"),
     ),
     public=True,
-    permission_classes=[permissions.AllowAny],
+    permission_classes=[permissions.IsAuthenticated],
 )
 
 urlpatterns = [
@@ -49,7 +51,9 @@ urlpatterns = [
     path('channel/', include('chat_channel.urls')),
     path('chat/', include('chat.urls')),
     path('profile/', include('user_profile.urls')),
-    path('ws/chat/', include('chat.routing')),
+    # path('ws/chat/', include('chat.routing')),
 
     path('token/', include('oauth2_token.urls')),
 ]
+
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
