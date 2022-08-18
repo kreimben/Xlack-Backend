@@ -9,3 +9,4 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     serializer_class = UserProfileSerializer
     http_method_names = ['get']
     permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'user_id'
