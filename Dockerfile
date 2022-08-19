@@ -9,7 +9,7 @@ EXPOSE 8000
 RUN apt-get update && \
     apt-get -y upgrade && \
     pip install --upgrade pip && \
-    pip install -r /requirements.txt
+    pip install -r requirements.txt
 
 RUN python manage.py collectstatic -v 2 --noinput
 
