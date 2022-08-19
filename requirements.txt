@@ -12,6 +12,8 @@ channels_redis
 djangorestframework-simplejwt[crypto]
 dj-rest-auth[with_social]
 django-allauth
-uvicorn
+uvicorn[standard]
 gunicorn
 daphne
+whitenoise
+django-cors-headers

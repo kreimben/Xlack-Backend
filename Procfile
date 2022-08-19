@@ -1,1 +1,2 @@
-web: gunicorn django_exercise.wsgi --log-file -
+web: python manage.py collectstatic --no-input; gunicorn xlack.asgi:application -k uvicorn.workers.UvicornWorker
+
