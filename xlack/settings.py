@@ -40,6 +40,7 @@ SESSION_COOKIE_SECURE = True
 
 # https://docs.djangoproject.com/en/4.0/ref/settings/#std-setting-CSRF_TRUSTED_ORIGINS
 CSRF_TRUSTED_ORIGINS = [
+    '*.*.*.*',
     'https://*.kreimben.com',
     'https://xlack-backend.herokuapp.com'
 ]
