@@ -15,3 +15,7 @@ class ChatView(generics.ListAPIView):
     pagination_class = LimitOffsetPagination
     lookup_field = 'channel_id'
     queryset = Chat.objects.order_by('-id').all()
+
+    def get_queryset(self):
+        cid = self.kwargs['channel_id']
+        return Chat.objects.order_by('-id').filter(channel_id=cid)
