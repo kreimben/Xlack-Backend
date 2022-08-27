@@ -1,5 +1,6 @@
 from allauth.socialaccount.models import SocialAccount
 from rest_framework import viewsets, permissions
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 from user_profile.models import UserProfile
@@ -37,7 +38,7 @@ class UserProfileViewSet(viewsets.ModelViewSet):
         식별자: `user_id`
         """
         user_id = self.kwargs.get('user_id')
-        social_user = SocialAccount.objects.get(user_id=user_id)
+        social_user = get_object_or_404(SocialAccount, **{'user_id': user_id})
         user, _ = UserProfile.objects.get_or_create(
             user_id=social_user.user_id,
             github_id=social_user.extra_data['id'],
