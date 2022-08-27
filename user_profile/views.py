@@ -14,6 +14,9 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     lookup_field = 'user_id'
 
     def list(self, request, *args, **kwargs):
+        """
+        모든 유저의 프로필입니다.
+        """
         social_users = SocialAccount.objects.all()
 
         for user in social_users:
@@ -29,6 +32,10 @@ class UserProfileViewSet(viewsets.ModelViewSet):
         return Response([user.data for user in s])
 
     def retrieve(self, request, *args, **kwargs):
+        """
+        특정 유저의 프로필입니다.
+        식별자: `user_id`
+        """
         user_id = self.kwargs.get('user_id')
         social_user = SocialAccount.objects.get(user_id=user_id)
         user, _ = UserProfile.objects.get_or_create(
