@@ -5,9 +5,9 @@ name: Docker
 # separate terms of service, privacy policy, and support
 # documentation.
 
-on:
-  push:
-    branches: [ deploy ]
+#on:
+#  push:
+#    branches: [ deploy ]
 
 env:
   REGISTRY: registry.kreimben.com
