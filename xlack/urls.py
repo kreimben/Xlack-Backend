@@ -49,6 +49,7 @@ urlpatterns = [
     path('docs/', schema_view.with_ui('swagger', cache_timeout=0), name='swagger_documentation'),
 
     path('channel/', include('chat_channel.urls')),
+    path('workspace/', include('workspace.urls')),
     path('chat/', include('chat.urls')),
     path('profile/', include('user_profile.urls')),
     # path('ws/chat/', include('chat.routing')),
