@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'chat_channel.apps.ChannelConfig',
     'user_profile.apps.UserProfileConfig',
     'oauth2_token.apps.Oauth2TokenConfig',
+    'workspace.apps.WorkspaceConfig',
 
     # Apps we installed.
     'rest_framework',
