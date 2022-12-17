@@ -11,4 +11,4 @@ RUN apt-get update && \
     pip install --upgrade pip && \
     pip install -r requirements.txt
 
-CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "URLS3.asgi:application", "-v", "3"]
+CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "xlack.asgi:application", "-v", "3"]
