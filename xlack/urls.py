@@ -21,7 +21,7 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    path(os.getenv('DJANGO_REAL_ADMIN_URI'), admin.site.urls),
+    path(f"{os.getenv('DJANGO_REAL_ADMIN_URI')}", admin.site.urls),
 
     # Normal Login.
     path('accounts/', include('rest_framework.urls', namespace='rest_framework')),
