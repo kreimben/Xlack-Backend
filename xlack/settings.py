@@ -40,8 +40,9 @@ SESSION_COOKIE_SECURE = True
 
 # https://docs.djangoproject.com/en/4.0/ref/settings/#std-setting-CSRF_TRUSTED_ORIGINS
 CSRF_TRUSTED_ORIGINS = [
-    'https://api.xlack.kreimben.com',
-    'https://xlack-backend.herokuapp.com'
+    'http://127.0.0.1:8000',
+    'http://localhost:8000',
+    'https://*.kreimben.com'
 ]
 
 # Application definition
@@ -52,6 +53,7 @@ INSTALLED_APPS = [
     'chat_channel.apps.ChannelConfig',
     'user_profile.apps.UserProfileConfig',
     'oauth2_token.apps.Oauth2TokenConfig',
+    'workspace.apps.WorkspaceConfig',
 
     # Apps we installed.
     'rest_framework',
@@ -244,7 +246,7 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-DATA_UPLOAD_MAX_MEMORY_SIZE = 1024  # https://stackoverflow.com/a/54539084/10684515
+DATA_UPLOAD_MAX_MEMORY_SIZE = 1024 * 10  # https://stackoverflow.com/a/54539084/10684515
 
 CORS_ORIGIN_WHITELIST = (
     'http://localhost:3000',
