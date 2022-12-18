@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'user_profile.apps.UserProfileConfig',
     'oauth2_token.apps.Oauth2TokenConfig',
     'workspace.apps.WorkspaceConfig',
+    'status.apps.StatusConfig',
 
     # Apps we installed.
     'rest_framework',
@@ -69,6 +70,7 @@ INSTALLED_APPS = [
     'dj_rest_auth',
     'dj_rest_auth.registration',
     'corsheaders',
+    'daphne',
 
     # Django Native App.
     'django.contrib.admin',
@@ -124,7 +126,12 @@ DATABASES = {
         'PASSWORD': os.getenv('DB_PW'),
         'HOST': os.getenv('DB_HOST'),
         'PORT': os.getenv('DB_PORT')
-    }
+    },
+    'OPTIONS': {
+        'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        'charset': 'utf8mb4',
+        'use_unicode': True,
+    },
 }
 
 CHANNEL_LAYERS = {
