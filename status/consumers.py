@@ -111,19 +111,19 @@ class StatusConsumer(JsonWebsocketConsumer):
 
             # Refine data.
             print(f'{datetime.utcnow()=}')
-            status = UserStatus.objects.prefetch_related('workspace') \
+            user_status = UserStatus.objects.prefetch_related('workspace') \
                 .filter(Q(workspace__hashed_value__exact=self.room_group_name) &
                         Q(until__gt=datetime.utcnow()))
 
             result = []
-            for s in status:
-                s: UserStatus
+            for status in user_status:
+                status: UserStatus
                 d = {}
-                d['message'] = s.message
-                d['icon'] = s.icon
-                d['until'] = s.until.strftime('%Y-%m-%d %H:%M%z')
-                d['user_id'] = s.user_id
-                d['workspace_id'] = s.workspace_id
+                d['message'] = status.message
+                d['icon'] = status.icon
+                d['until'] = status.until.strftime('%Y-%m-%d %H:%M%z')
+                d['user_id'] = status.user_id
+                d['workspace_id'] = status.workspace_id
                 result.append(d)
             data['users_status'] = result
 
