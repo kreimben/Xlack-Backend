@@ -35,6 +35,7 @@ urlpatterns = [
     path('workspace/', include('workspace.urls')),
     path('chat/', include('chat.urls')),
     path('profile/', include('user_profile.urls')),
+    path('status/', include('status.urls')),
 
     path('token/', include('oauth2_token.urls')),
 ]

@@ -15,7 +15,6 @@ django-allauth
 uvicorn[standard]
 gunicorn
 daphne
-whitenoise
 django-cors-headers
 django-storages
 boto3
