@@ -10,6 +10,9 @@ class UserProfile(models.Model):
     thumbnail_url = models.URLField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    display_name = models.CharField(max_length=50, default='')
+    title = models.TextField(null=True, blank=True)
+    phone_number = models.CharField(max_length=20, default='')
 
     class Meta:
         ordering = ['created_at', 'user_id']
