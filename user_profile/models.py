@@ -1,4 +1,4 @@
-from django.conf import settings
+from xlack import settings
 from django.db import models
 
 
