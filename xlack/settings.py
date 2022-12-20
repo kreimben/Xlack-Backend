@@ -45,7 +45,7 @@ CSRF_TRUSTED_ORIGINS = [
     'https://*.kreimben.com'
 ]
 
-AUTH_USER_MODEL = 'custom_user.CustomUser'
+AUTH_USER_MODEL: str = 'custom_user.CustomUser'
 
 # Application definition
 
