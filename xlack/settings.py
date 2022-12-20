@@ -45,6 +45,8 @@ CSRF_TRUSTED_ORIGINS = [
     'https://*.kreimben.com'
 ]
 
+AUTH_USER_MODEL = 'custom_user.CustomUser'
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -55,6 +57,7 @@ INSTALLED_APPS = [
     'oauth2_token.apps.Oauth2TokenConfig',
     'workspace.apps.WorkspaceConfig',
     'status.apps.StatusConfig',
+    'custom_user.apps.CustomUserConfig',
 
     # Apps we installed.
     'rest_framework',

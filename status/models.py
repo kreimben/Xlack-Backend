@@ -1,14 +1,14 @@
-from django.conf.global_settings import AUTH_USER_MODEL
 from django.db import models
 
 from workspace.models import Workspace
+from custom_user.models import CustomUser
 
 
 class UserStatus(models.Model):
     message = models.CharField(max_length=100)
     icon = models.CharField(max_length=100)
     until = models.DateTimeField()
-    user = models.OneToOneField(AUTH_USER_MODEL,
+    user = models.OneToOneField(CustomUser,
                                 on_delete=models.CASCADE,
                                 related_name='status')  # If original row is exist, Update it.
     workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name='user_status')
