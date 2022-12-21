@@ -7,6 +7,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from custom_user.models import CustomUser
 from workspace.models import Workspace
 from workspace.serializers import NameWorkspaceSerializer, BaseWorkspaceSerializer
 
@@ -37,12 +38,13 @@ class WorkspaceView(generics.CreateAPIView,
         else:
             return JsonResponse(status=status.HTTP_400_BAD_REQUEST, data={'msg': s.errors})
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args, **kwargs):
         """
         자신이 가입한 workspace만 배열로 나옵니다.
         """
-        # TODO: Custom user model을 새로 만들면 그 모델 안에서 역참조 해서 결과 값 보여주기.
-        return JsonResponse(data={'msg': 'not implemented yet.'})
+        workspaces = request.user.joined_workspaces.all()
+        serializers = [self.get_serializer(workspace) for workspace in workspaces]
+        return Response(data=[serializer.data for serializer in serializers])
 
     @swagger_auto_schema(request_body=Schema(
         type=TYPE_OBJECT,

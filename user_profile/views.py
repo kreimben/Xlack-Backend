@@ -1,49 +1,30 @@
-from allauth.socialaccount.models import SocialAccount
-from rest_framework import viewsets, permissions
-from rest_framework.generics import get_object_or_404
+from rest_framework import generics, permissions, status
+from rest_framework.request import Request
 from rest_framework.response import Response
 
-from user_profile.models import UserProfile
-from user_profile.serializers import UserProfileSerializer
+from custom_user.models import CustomUser
+from custom_user.serializers import CustomUserSerializer
 
 
-class UserProfileViewSet(viewsets.ModelViewSet):
-    queryset = UserProfile.objects.all()
-    serializer_class = UserProfileSerializer
-    http_method_names = ['get']
+class UserProfileView(generics.RetrieveAPIView,
+                      generics.UpdateAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = CustomUserSerializer
+    http_method_names = ['get', 'patch']
     permission_classes = [permissions.IsAuthenticated]
-    lookup_field = 'user_id'
 
-    def list(self, request, *args, **kwargs):
+    def get(self, request: Request, *args, **kwargs):
         """
-        모든 유저의 프로필입니다.
+        본인의 프로필입니다.
         """
-        social_users = SocialAccount.objects.all()
-
-        for user in social_users:
-            UserProfile.objects.get_or_create(
-                user_id=user.user_id,
-                github_id=user.extra_data['id'],
-                bio=user.extra_data['bio'],
-                thumbnail_url=user.extra_data['avatar_url']
-            )
-
-        s = [UserProfileSerializer(user) for user in self.get_queryset()]
-
-        return Response([user.data for user in s])
-
-    def retrieve(self, request, *args, **kwargs):
-        """
-        특정 유저의 프로필입니다.
-        식별자: `user_id`
-        """
-        user_id = self.kwargs.get('user_id')
-        social_user = get_object_or_404(SocialAccount, **{'user_id': user_id})
-        user, _ = UserProfile.objects.get_or_create(
-            user_id=social_user.user_id,
-            github_id=social_user.extra_data['id'],
-            bio=social_user.extra_data['bio'],
-            thumbnail_url=social_user.extra_data['avatar_url']
-        )
-        serializer = UserProfileSerializer(user)
+        serializer = self.get_serializer(request.user)
         return Response(serializer.data)
+
+    def patch(self, request: Request, *args, **kwargs):
+        """
+        프로필을 수정합니다.
+        """
+        s: CustomUserSerializer = self.get_serializer()
+        s.update(request.user, request.data)
+
+        return Response(self.get_serializer(request.user).data)
