@@ -2,29 +2,34 @@ from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 
 from chat_channel.models import ChatChannel
+from custom_user.serializers import CustomUserSerializer
 from workspace.models import Workspace
 
 
 class ChatChannelModifySerializer(serializers.ModelSerializer):
     description = serializers.CharField(required=False)
+    members = CustomUserSerializer(many=True, read_only=True)
 
     class Meta:
         model = ChatChannel
-        fields = ['name', 'id', 'description']
+        fields = ['name', 'id', 'description', 'members']
 
 
 class ChatChannelFixDescSerializer(serializers.ModelSerializer):
+    members = CustomUserSerializer(many=True, read_only=True)
+
     class Meta:
         model = ChatChannel
-        fields = ['id', 'name', 'description']
+        fields = ['id', 'name', 'description', 'members']
 
 
 class ChatChannelSerializer(serializers.ModelSerializer):
     description = serializers.CharField(read_only=True)
+    members = CustomUserSerializer(many=True, read_only=True)
 
     class Meta:
         model = ChatChannel
-        fields = ['name', 'id', 'description']
+        fields = ['name', 'id', 'description', 'members']
 
     def create(self, validated_data):
         hashed_value = ''

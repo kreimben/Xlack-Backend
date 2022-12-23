@@ -32,6 +32,7 @@ class ChatChannelView(generics.CreateAPIView,
         """
         `workspace_hashed_value`를 입력하면 해당 workspace의 `chat_channel`을 추가합니다.
         `name`에는 만들 채널의 이름을 넣으십시오.
+        채널을 생성하면 `members`안에는 자동으로 만든 사람의 정보가 포함 됩니다.
         """
         if request.data.get('name', None) is None:
             return Response({'msg': 'name field is not filled.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -40,7 +41,9 @@ class ChatChannelView(generics.CreateAPIView,
 
         workspace = Workspace.objects.get(hashed_value__exact=hashed_value)
         chat_channel = ChatChannel.objects.create(name=request.data.get('name', None),
+                                                  description=request.data.get('description', None),
                                                   workspace=workspace)
+        chat_channel.members.add(request.user)
 
         serializer = self.get_serializer(chat_channel)
         return Response(serializer.data)
@@ -57,7 +60,7 @@ class ChatChannelView(generics.CreateAPIView,
     def patch(self, request: Request, *args, **kwargs):
         """
         `ChatChannel`의 설명 문구를 바꾸기 위한 엔드포인트 입니다.
-        이걸로 `ChatChannel`의 이름은 못바꿉니다.
+        이걸로 `ChatChannel`의 이름이나 `members`는 못바꿉니다.
         body의 `name`은 설명을 바꿀 `ChatChannel`의 이름입니다.
         """
         chat_channel = self.get_queryset().get(name__exact=request.data.get('name', None))
