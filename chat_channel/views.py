@@ -47,6 +47,7 @@ class ChatChannelView(generics.CreateAPIView,
                                                   description=request.data.get('description', None),
                                                   workspace=workspace)
         chat_channel.members.add(request.user)
+        chat_channel.admins.add(request.user)
 
         serializer = self.get_serializer(chat_channel)
         return Response(serializer.data)
