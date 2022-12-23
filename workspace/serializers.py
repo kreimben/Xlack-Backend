@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from chat_channel.serializers import ChatChannelSerializer
 from custom_user.serializers import CustomUserSerializer
 from workspace.models import Workspace
 
@@ -8,6 +9,7 @@ class BaseWorkspaceSerializer(serializers.ModelSerializer):
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
     members = CustomUserSerializer(many=True, read_only=True)
+    chat_channel = ChatChannelSerializer(many=True, read_only=True)
 
     class Meta:
         model = Workspace
