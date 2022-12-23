@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'workspace.apps.WorkspaceConfig',
     'status.apps.StatusConfig',
     'custom_user.apps.CustomUserConfig',
+    'file.apps.FileConfig',
 
     # Apps we installed.
     'rest_framework',
