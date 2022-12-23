@@ -10,7 +10,8 @@ class ChatChannel(models.Model):
     name = models.CharField(max_length=50, unique=True)
     workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, null=False, blank=False, related_name='chat_channel')
     description = models.TextField(null=True, blank=True)
-    members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='chat_channel')
+    members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='chat_channel_members')
+    admins = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='chat_channel_admins')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
