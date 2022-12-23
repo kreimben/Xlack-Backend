@@ -1,9 +1,12 @@
 from rest_framework import permissions, generics, status
+from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from chat_channel.models import ChatChannel
-from chat_channel.serializers import ChatChannelSerializer, ChatChannelModifySerializer, ChatChannelFixDescSerializer
+from chat_channel.serializers import ChatChannelSerializer, ChatChannelModifySerializer, ChatChannelFixDescSerializer, \
+    ChatChannelMembersModifyRequestSerializer, ChatChannelMembersModifyResponseSerializer
+from custom_user.models import CustomUser
 from workspace.models import Workspace
 
 
@@ -100,3 +103,64 @@ class ChatChannelUpdateDeleteView(generics.UpdateAPIView,
         chat_channel.save()
         serializer = self.get_serializer(chat_channel)
         return Response(serializer.data)
+
+
+class ChatChannelAddMembersView(generics.UpdateAPIView):
+    queryset = ChatChannel.objects.all()
+    http_method_names = ['post']
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ChatChannelMembersModifyRequestSerializer
+
+    def get_queryset(self):
+        hashed_value = self.kwargs.get('workspace__hashed_value', None)
+        channel_name = self.kwargs.get('channel_name', None)
+        result = self.queryset.get(workspace__hashed_value=hashed_value, name__exact=channel_name)
+        return result
+
+    def post(self, request: Request, *args, **kwargs):
+        """
+        채널에 인원을 추가 하고 싶을 때 쓰는 엔드포인트 입니다.
+        배열을 쓰면 여러명을 추가 할 수 있습니다.
+        """
+        chat_channel: ChatChannel = self.get_queryset()
+        users = []
+        try:
+            for user in request.data.get('members_usernames', None):
+                username = user.get("username", None)
+                users.append(CustomUser.objects.get(username__exact=username))
+        except CustomUser.DoesNotExist as e:
+            return Response({'msg': str(e)}, status=status.HTTP_404_NOT_FOUND)
+
+        chat_channel.members.add(*users)
+        chat_channel.save()
+
+        serializer = ChatChannelMembersModifyResponseSerializer(chat_channel)
+        return Response(serializer.data)
+
+
+class ChatChannelDeleteMembersView(generics.UpdateAPIView):
+    queryset = ChatChannel.objects.all()
+    http_method_names = ['delete']
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ChatChannelMembersModifyRequestSerializer
+
+    def get_queryset(self):
+        hashed_value = self.kwargs.get('workspace__hashed_value', None)
+        channel_name = self.kwargs.get('channel_name', None)
+        result = self.queryset.get(workspace__hashed_value=hashed_value, name__exact=channel_name)
+        return result
+
+    def delete(self, request: Request, *args, **kwargs):
+        """
+        특정 유저를 삭제 할 때 쓰는 엔드포인트 입니다.
+        한번에 한명만 없앨 수 있습니다.
+        """
+        username = kwargs.get('username', None)
+        print(f'{username=}')
+        user = get_object_or_404(CustomUser, username__exact=username)
+
+        chat_channel: ChatChannel = self.get_queryset()
+        chat_channel.members.remove(user)
+        chat_channel.save()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)

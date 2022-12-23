@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 
 from chat_channel.models import ChatChannel
-from custom_user.serializers import CustomUserSerializer
+from custom_user.serializers import CustomUserSerializer, CustomUserNameSerializer
 from workspace.models import Workspace
 
 
@@ -16,6 +16,25 @@ class ChatChannelModifySerializer(serializers.ModelSerializer):
 
 
 class ChatChannelFixDescSerializer(serializers.ModelSerializer):
+    members = CustomUserSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ChatChannel
+        fields = ['id', 'name', 'description', 'members']
+
+
+class ChatChannelMembersModifyRequestSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(read_only=True)
+    description = serializers.CharField(read_only=True)
+    members_usernames = CustomUserNameSerializer(many=True)
+
+    class Meta:
+        model = ChatChannel
+        fields = ['id', 'name', 'description', 'members_usernames']
+
+class ChatChannelMembersModifyResponseSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(read_only=True)
+    description = serializers.CharField(read_only=True)
     members = CustomUserSerializer(many=True, read_only=True)
 
     class Meta:
