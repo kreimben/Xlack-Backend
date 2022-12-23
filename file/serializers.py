@@ -1,10 +1,11 @@
 from rest_framework import serializers
 
+from custom_user.serializers import CustomUserSerializer
 from file.models import File
 
 
 class FileSerializer(serializers.ModelSerializer):
-    uploaded_by = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
+    uploaded_by = CustomUserSerializer(read_only=True)
 
     class Meta:
         model = File
