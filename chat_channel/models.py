@@ -8,6 +8,7 @@ class ChatChannel(models.Model):
     # Should we make chatted user field?
     name = models.CharField(max_length=50, unique=True)
     workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, null=False, blank=False, related_name='chat_channel')
+    description = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
