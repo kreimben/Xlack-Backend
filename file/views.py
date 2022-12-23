@@ -16,9 +16,4 @@ class FileViewSet(viewsets.ModelViewSet):
         serializer.save(uploaded_by=self.request.user)
 
     def create(self, request, *args, **kwargs):
-        try:
-            file = File.objects.get(uploaded_by=self.request.user)
-            file.delete()
-        except File.DoesNotExist:
-            ...
         return super().create(request, *args, **kwargs)
