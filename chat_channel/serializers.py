@@ -3,15 +3,14 @@ from rest_framework.generics import get_object_or_404
 
 from chat_channel.models import ChatChannel
 from workspace.models import Workspace
-from workspace.serializers import HashWorkspaceSerializer
 
 
 class ChatChannelSerializer(serializers.ModelSerializer):
-    workspace = HashWorkspaceSerializer()
+    # workspace = HashWorkspaceSerializer()
 
     class Meta:
         model = ChatChannel
-        fields = ['name', 'id', 'workspace']
+        fields = ['name', 'id', ]  # 'workspace']
 
     def create(self, validated_data):
         hashed_value = ''
