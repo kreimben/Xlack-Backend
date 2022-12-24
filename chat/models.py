@@ -1,3 +1,4 @@
+from file.models import File
 from xlack import settings
 from django.db import models
 
@@ -6,6 +7,7 @@ from chat_channel.models import ChatChannel
 
 class Chat(models.Model):
     message = models.TextField(null=False, blank=False)
+    file = models.ForeignKey(File, on_delete=models.SET_NULL, null=True, blank=True)
     chatter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=False)
     channel = models.ForeignKey(ChatChannel, on_delete=models.CASCADE, null=False, blank=False, related_name='chat')
     created_at = models.DateTimeField(auto_now_add=True)
