@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 
 from chat.models import Chat
 from chat_channel.models import ChatChannel
+from file.models import File
 
 
 class ChatConsumer(AsyncJsonWebsocketConsumer):
@@ -32,8 +33,13 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             return ChatChannel.objects.get(id=channel_id)
 
         @database_sync_to_async
-        def create_chat(message, chatter, channel):
-            return Chat(message=message, chatter=chatter, channel=channel).save()
+        def create_chat(message, file_url: str, chatter, channel):
+            if file_url:
+                file_id = file_url.split('/')[-1]
+                f = File.objects.get(id=file_id)
+            else:
+                f = None
+            return Chat(message=message, file=f, chatter=chatter, channel=channel).save()
 
         @database_sync_to_async
         def get_user(user_id):
@@ -50,7 +56,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             {
                 'type': 'speak',
                 'user': content['user_id'],
-                'message': content['message']
+                'message': content['message'],
+                'file': content.get('file', None)
             }
         )
 
@@ -60,7 +67,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         """
         await self.send_json({
             'user': event['user'],
-            'message': event['message']
+            'message': event['message'],
+            'file': event['file']
         })
 
     async def disconnect(self, code):
