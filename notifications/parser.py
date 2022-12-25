@@ -1,11 +1,12 @@
 # notifications/parser.py
 
 from chat_channel.models import ChatChannel
+from notifications.models import Notification
 
 
 class Parser:
     """
-    Parsing
+    Parsing arguments
     """
 
     def creation(**kwargs):
@@ -37,15 +38,29 @@ class Parser:
         result = list()
         for member_id in id_of_members:
             if member_id != sender:
-                result.append(dict(receiver=member_id, channel=channel))
+                result.append(
+                    dict(
+                        sender=sender,
+                        receiver=member_id,
+                        channel=channel,
+                        had_read=False,
+                    )
+                )
 
         return result
 
-    def receiver(receiver):
+    def sources(receiver) -> list(dict()):
         """
-        unparsing receiver,
-        create notification sources
+        create notification sources via receiver
         """
-        receiver = kwargs.get("receiver", None)
+        sources = Notification.objects.filter(receiver=receiver).distinct(
+            "sender", "channel"
+        )
 
-        pass
+        result = list()
+        for entry in sources:
+            result.append(
+                dict(receiver=receiver, channel=entry.channel, sender=entry.sender)
+            )
+
+        return result

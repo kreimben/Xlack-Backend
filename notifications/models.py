@@ -6,42 +6,6 @@ from xlack import settings
 
 from chat_channel.models import ChatChannel
 
-# from chat.models import Chat
-
-
-"""
-=== Logic of Notification Creation
-
-1. Get Notification by signal
-
-2. Parsing it,
-    Who send it?
-    in where ?
-    who receive it ?
-
-3. Manage it,
-    if the receiver is offline, save it to DB
-    elif the receiver is online,
-        don't save, just notify
-
-"""
-
-"""
-=== Logic of Notification Use
-
-1. User connected
-
-2. Get user's info 
-
-3. Notification internal signal, user is online
-
-4. Get Notification by Group (Source of Notification)
-    and send them to User
-
-5. if user read, modify it
-
-"""
-
 
 class Notification(models.Model):
     """
