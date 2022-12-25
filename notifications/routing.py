@@ -4,8 +4,8 @@ from notifications import consumers
 
 websocket_urlpatterns = [
     re_path(
-        # have to add point
-        r"ws//(?\w+)/$",
+        # TODO: Modifire
+        r"ws//(?^notification)/$",
         consumers.NotificationsConsumer.as_asgi(),
     ),
 ]
