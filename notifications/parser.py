@@ -1,5 +1,7 @@
 # notifications/parser.py
 
+from chat_channel.models import ChatChannel
+
 
 class Parser:
     """
@@ -8,13 +10,42 @@ class Parser:
 
     def creation(**kwargs):
         """
-        Find and create,
+        Parsing argument for
+        creation of notifications,
+        with provided sender and channel
         """
+        sender = kwargs.get("sender", None)
+        channel = kwargs.get("channel", None)
 
-        pass
+        _is_dm = True if channel == None else False
 
-    def receiver():
+        # TODO:  benchmark two way finding user,
+        # From ChatChannels with User , From User with Channel
+
+        if _is_dm:
+            return kwargs
+
+        id_of_members = (
+            # select related will do better?
+            ChatChannel.objects.prefetch_related("members")
+            .filter(name=channel)
+            .values_list("members", flat=True)
+            # the flat options is True so result of qurreyset
+            # is just qurreyset <list of id>
+        )
+
+        result = list()
+        for member_id in id_of_members:
+            if member_id != sender:
+                result.append(dict(receiver=member_id, channel=channel))
+
+        return result
+
+    def receiver(receiver):
         """
-        Find ?,
+        unparsing receiver,
+        create notification sources
         """
+        receiver = kwargs.get("receiver", None)
+
         pass

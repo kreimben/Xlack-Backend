@@ -2,7 +2,7 @@
 from django.db.models import Manager
 from django.db.models import Q
 
-# TODO: optimize
+# TODO: optimize, manage exceptions
 
 
 class NotificationManger(Manager):
@@ -23,8 +23,8 @@ class NotificationManger(Manager):
         get notifications belongs to one receiver,
         by source, (sender and channel)
         """
-        sender = kwargs.get("receiver", None)
-        channel = kwargs.get("receiver", None)
+        sender = kwargs.get("sender", None)
+        channel = kwargs.get("channel", None)
         return self.get_by_recevier(self, kwargs).filter(
             Q(sender=sender), Q(channel=channel)
         )
