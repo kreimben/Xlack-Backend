@@ -5,5 +5,5 @@ from chat_channel.models import ChatChannel
 
 @admin.register(ChatChannel)
 class ChatChannelAdmin(admin.ModelAdmin):
-    list_display = ['id', 'name', 'created_at', 'updated_at']
+    list_display = ['id', 'name', 'description', 'created_at', 'updated_at']
     search_fields = ['name']
