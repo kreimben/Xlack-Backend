@@ -4,6 +4,6 @@ from chat_channel import views
 
 router = routers.DefaultRouter()
 
-router.register('', views.ChatChannelViewSet)
+# router.register('', views.ChatChannelViewSet)
 
 urlpatterns = router.urls
