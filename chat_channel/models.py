@@ -20,4 +20,4 @@ class ChatChannel(models.Model):
         verbose_name_plural = 'Channels'
 
     def __str__(self):
-        return self.name
+        return f'{self.name} ({self.hashed_value} / {self.workspace})'
