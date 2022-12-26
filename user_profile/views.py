@@ -26,7 +26,7 @@ class UserProfileView(generics.RetrieveAPIView,
     def patch(self, request: Request, *args, **kwargs):
         """
         프로필을 수정합니다.
-        이미지느 바로 업로드 하면 됩니다.
+        이미지는 바로 업로드 하면 됩니다.
         """
         s: CustomUserSerializer = self.get_serializer()
         s.update(request.user, request.data)
