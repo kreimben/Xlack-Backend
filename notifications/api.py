@@ -26,7 +26,6 @@ def create_notification_list(receiver) -> list(dict()):
             )
         else:
             result.append(
-                sender=entry.sender,
                 channel=entry.channel,
                 count=Notification.objects.get_by_source(entry).count(),
             )
