@@ -5,48 +5,27 @@ from channels.exceptions import StopConsumer
 from channels.generic.websocket import JsonWebsocketConsumer
 from django.contrib.auth.models import User
 from django.db.models import Q
-from rest_framework_simplejwt.exceptions import TokenError
-from rest_framework_simplejwt.tokens import AccessToken
 
+from AuthHelper import AuthHelper, AccessTokenNotIncludedInHeader
+from custom_user.models import CustomUser
 from status.models import UserStatus
 from workspace.models import Workspace
 
 
-def _find_user(access_token: str) -> (User | None, int | None):
-    try:
-        access_token_obj = AccessToken(access_token)
-    except TokenError:
-        return None, None
-    user_id = access_token_obj['user_id']
-    # print(f'{user_id=}')
-    user = User.objects.get(id=user_id)
-    # print(f'{user=}')
-    return user, user_id
-
-
-def _find_access_token(scope) -> str | None:
-    access_token = None
-    for element in scope["headers"]:
-        if element[0] == b'authorization' or element[0] == b'Authorization':
-            access_token = element[1]
-
-    return access_token.split()[1]
-
-
 class StatusConsumer(JsonWebsocketConsumer):
     def connect(self):
-        # print(f'{self.scope["url_route"]["kwargs"]}')
+        kwargs = self.scope["url_route"]["kwargs"]
+        self.room_group_name = kwargs.get('workspace_hashed_value')
 
         # Check auth first.
-        access_token = _find_access_token(self.scope)
-        if access_token is None:
-            print('Authorization token not found!')
+        try:
+            user = AuthHelper.find_user(self.scope)
+        except AccessTokenNotIncludedInHeader:
+            print(f'access token was not in header.')
             return
-
-        user, user_id = _find_user(access_token)
-        kwargs = self.scope["url_route"]["kwargs"]
-
-        self.room_group_name = kwargs.get('workspace_hashed_value')
+        except CustomUser.DoesNotExist:
+            print(f'No such user.')
+            return
 
         async_to_sync(self.channel_layer.group_add)(
             self.room_group_name,
@@ -67,7 +46,7 @@ class StatusConsumer(JsonWebsocketConsumer):
             return
 
         self.accept()
-        self.send_json(content={'user_id': user_id})
+        self.send_json(content={'user_id': user.id})
 
     message_field = ['status_message', 'status_icon', 'until']
 
@@ -77,10 +56,16 @@ class StatusConsumer(JsonWebsocketConsumer):
         And check what fields are unfilled.
         If no problem, Send message to everyone.
         """
-        access_token = _find_access_token(self.scope)  # Don't check about access token.
-        user, _ = _find_user(access_token)  # May return None if access token is expired.
-        if user is None:
-            self.send_json(content={'msg': 'access token is expired or invalid.'}, close=True)
+        try:
+            user = AuthHelper.find_user(self.scope)
+        except AccessTokenNotIncludedInHeader:
+            print(f'access token was not in header.')
+            self.send_json(content={'msg': 'access token was not in header.'}, close=True)
+            return
+        except CustomUser.DoesNotExist:
+            print(f'No such user.')
+            self.send_json(content={'msg': 'No such user.'}, close=True)
+            return
 
         data = {'type': 'status.broadcast'}
         not_filled = []

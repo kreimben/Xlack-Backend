@@ -1,19 +1,27 @@
-from channels.db import database_sync_to_async
+from asgiref.sync import sync_to_async
 from channels.exceptions import StopConsumer
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
-from django.contrib.auth.models import User
 
+from AuthHelper import AuthHelper, AccessTokenNotIncludedInHeader
 from chat.models import Chat
 from chat_channel.models import ChatChannel
+from custom_user.models import CustomUser
 from file.models import File
 
 
 class ChatConsumer(AsyncJsonWebsocketConsumer):
-    # TODO: Implement auth jobs for JWT.
     async def connect(self):
-        self.channel_id = self.scope['url_route']['kwargs']['channel_id']
-        # print(f'channel_id: {self.channel_id}')
-        self.room_group_name = f'chat_{self.channel_id}'
+        kwargs = self.scope["url_route"]["kwargs"]
+        self.room_group_name = kwargs['chat_channel_hashed_value']
+
+        try:
+            await sync_to_async(AuthHelper.find_user)(self.scope)
+        except AccessTokenNotIncludedInHeader:
+            print(f'access token was not in header.')
+            return
+        except CustomUser.DoesNotExist:
+            print(f'No such user.')
+            return
 
         await self.channel_layer.group_add(
             self.room_group_name,
@@ -27,37 +35,28 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         This function JUST receive messages.
         After that, You should send message to group.
         """
+        user: CustomUser = await sync_to_async(AuthHelper.find_user)(self.scope)
+        channel: ChatChannel = await ChatChannel.objects.aget(hashed_value__exact=self.room_group_name)
+        f = None
+        file_url = None
+        if content.get('file_url', None) is not None:
+            file_url = content.get('file_url', None)
+            file_id = file_url.split('/')[-2]
+            f = await File.objects.aget(id=file_id)
 
-        @database_sync_to_async
-        def get_channel(channel_id):
-            return ChatChannel.objects.get(id=channel_id)
-
-        @database_sync_to_async
-        def create_chat(message, file_url: str, chatter, channel):
-            if file_url:
-                file_id = file_url.split('/')[-1]
-                f = File.objects.get(id=file_id)
-            else:
-                f = None
-            return Chat(message=message, file=f, chatter=chatter, channel=channel).save()
-
-        @database_sync_to_async
-        def get_user(user_id):
-            return User.objects.get(id=user_id)
-
-        user: User = await get_user(content['user_id'])
-        # print(f'user: {user}')
-        # print(f'user id: {content["user_id"]}')
-        channel = await get_channel(self.channel_id)
-        await create_chat(content['message'], user, channel)
+        chat: Chat = await Chat.objects.acreate(message=content['message'],
+                                                chatter=user,
+                                                channel=channel,
+                                                file=f if f is not None else None)
 
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 'type': 'speak',
-                'user': content['user_id'],
-                'message': content['message'],
-                'file': content.get('file', None)
+                'username': user.username,
+                'user_id': user.id,
+                'message': chat.message,
+                'file_url': file_url
             }
         )
 
@@ -66,9 +65,10 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         This function speaks message to every body in this group.
         """
         await self.send_json({
-            'user': event['user'],
+            'username': event['username'],
+            'user_id': event['user_id'],
             'message': event['message'],
-            'file': event['file']
+            'file_url': event['file_url']
         })
 
     async def disconnect(self, code):
