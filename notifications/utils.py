@@ -5,6 +5,8 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from django.contrib.auth.models import User
 
+import asyncio
+
 """
 utils like verifying, finding
 and check status
@@ -31,3 +33,8 @@ def find_access_token(scope) -> str | None:
             access_token = element[1]
 
     return access_token.split()[1]
+
+
+async def delay(delay, func, **kwargs):
+    await asyncio.sleep(delay)
+    func(kwargs)
