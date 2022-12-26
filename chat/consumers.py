@@ -38,11 +38,12 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         user: CustomUser = await sync_to_async(AuthHelper.find_user)(self.scope)
         channel: ChatChannel = await ChatChannel.objects.aget(hashed_value__exact=self.room_group_name)
         f = None
-        file_url = None
-        if content.get('file_url', None) is not None:
-            file_url = content.get('file_url', None)
-            file_id = file_url.split('/')[-2]
-            f = await File.objects.aget(id=file_id)
+        file_id = content.get('file_id', None)
+        if file_id is not None:
+            try:
+                f = await File.objects.aget(id=file_id)
+            except File.DoesNotExist as e:
+                await self.send_json({'msg': str(e)}, close=True)
 
         chat: Chat = await Chat.objects.acreate(message=content['message'],
                                                 chatter=user,
@@ -56,7 +57,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 'username': user.username,
                 'user_id': user.id,
                 'message': chat.message,
-                'file_url': file_url
+                'file_id': file_id
             }
         )
 
@@ -68,7 +69,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             'username': event['username'],
             'user_id': event['user_id'],
             'message': event['message'],
-            'file_url': event['file_url']
+            'file_id': event['file_id']
         })
 
     async def disconnect(self, code):
