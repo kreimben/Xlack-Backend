@@ -21,7 +21,7 @@ class NotificationManger(Manager):
     def get_by_source(self, **kwargs):
         """
         get notifications belongs to one receiver,
-        by source, (sender and channel)
+        by source, (sender or channel)
         """
         sender = kwargs.get("sender", None)
         channel = kwargs.get("channel", None)

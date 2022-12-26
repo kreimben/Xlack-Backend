@@ -64,6 +64,9 @@ class NotificationsConsumer(AsyncJsonWebsocketConsumer):
                 content={"msg": "access token is expired or invalid."}, close=True
             )
 
+        if content.refresh:
+            self._refresh(user_id)
+
         if content.sender and content.channel == None:
             self.send_json(content={"msg": "sender and channel are invalid."})
 

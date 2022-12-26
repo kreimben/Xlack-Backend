@@ -40,7 +40,6 @@ class Parser:
             if member_id != sender:
                 result.append(
                     dict(
-                        sender=sender,
                         receiver=member_id,
                         channel=channel,
                         had_read=False,
