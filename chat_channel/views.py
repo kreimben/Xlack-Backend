@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import permissions, generics, status
@@ -49,7 +51,8 @@ class ChatChannelView(generics.CreateAPIView,
         workspace = Workspace.objects.get(hashed_value__exact=hashed_value)
         chat_channel = ChatChannel.objects.create(name=request.data.get('name', None),
                                                   description=request.data.get('description', None),
-                                                  workspace=workspace)
+                                                  workspace=workspace,
+                                                  hashed_value=str(uuid4())[:8])
         chat_channel.members.add(request.user)
         chat_channel.admins.add(request.user)
 
@@ -72,7 +75,7 @@ class ChatChannelView(generics.CreateAPIView,
         body의 `name`은 설명을 바꿀 `ChatChannel`의 이름입니다.
         `admins`안에 포함되지 않은 유저는 401이 나옵니다.
         """
-        chat_channel = self.get_queryset().get(name__exact=request.data.get('name', None))
+        chat_channel = self.get_queryset().get(hashed_value__exact=request.data.get('hashed_value', None))
 
         if request.user not in chat_channel.admins.all():
             return Response(status=status.HTTP_401_UNAUTHORIZED)
@@ -92,9 +95,10 @@ class ChatChannelUpdateDeleteView(generics.UpdateAPIView,
     serializer_class = ChatChannelSerializer
 
     def get_queryset(self):
-        hashed_value = self.kwargs.get('workspace__hashed_value', None)
-        channel_name = self.kwargs.get('channel_name', None)
-        result = self.queryset.get(workspace__hashed_value=hashed_value, name__exact=channel_name)
+        workspace_hashed_value = self.kwargs.get('workspace__hashed_value', None)
+        channel_hashed_value = self.kwargs.get('channel__hashed_value', None)
+        result = self.queryset.get(workspace__hashed_value=workspace_hashed_value,
+                                   hashed_value__exact=channel_hashed_value)
         return result
 
     def delete(self, request: Request, *args, **kwargs):
@@ -110,7 +114,7 @@ class ChatChannelUpdateDeleteView(generics.UpdateAPIView,
     def patch(self, request: Request, *args, **kwargs):
         """
         `ChatChannel`의 이름을 바꿀때 사용합니다.
-        path에 `channel_name`은 대상의 이름, body에 `name`은 새로 바꿀 이름입니다.
+        path에 `channel__hashed_name`은 대상의 해시 값, body에 `name`은 새로 바꿀 이름입니다.
         """
         chat_channel: ChatChannel = self.get_queryset()
 
@@ -130,9 +134,10 @@ class ChatChannelAddMembersView(generics.CreateAPIView):
     serializer_class = ChatChannelMembersModifyRequestSerializer
 
     def get_queryset(self):
-        hashed_value = self.kwargs.get('workspace__hashed_value', None)
-        channel_name = self.kwargs.get('channel_name', None)
-        result = self.queryset.get(workspace__hashed_value=hashed_value, name__exact=channel_name)
+        workspace_hashed_value = self.kwargs.get('workspace__hashed_value', None)
+        channel_hashed_value = self.kwargs.get('channel__hashed_value', None)
+        result = self.queryset.get(workspace__hashed_value=workspace_hashed_value,
+                                   hashed_value__exact=channel_hashed_value)
         return result
 
     def post(self, request: Request, *args, **kwargs):
@@ -154,7 +159,6 @@ class ChatChannelAddMembersView(generics.CreateAPIView):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
         chat_channel.members.add(*users)
-        chat_channel.save()
 
         serializer = ChatChannelSerializer(chat_channel)
         return Response(serializer.data)
@@ -167,9 +171,10 @@ class ChatChannelDeleteMembersView(generics.DestroyAPIView):
     serializer_class = ChatChannelMembersModifyRequestSerializer
 
     def get_queryset(self):
-        hashed_value = self.kwargs.get('workspace__hashed_value', None)
-        channel_name = self.kwargs.get('channel_name', None)
-        result = self.queryset.get(workspace__hashed_value=hashed_value, name__exact=channel_name)
+        workspace_hashed_value = self.kwargs.get('workspace__hashed_value', None)
+        channel_hashed_value = self.kwargs.get('channel__hashed_value', None)
+        result = self.queryset.get(workspace__hashed_value=workspace_hashed_value,
+                                   hashed_value__exact=channel_hashed_value)
         return result
 
     def delete(self, request: Request, *args, **kwargs):
@@ -187,7 +192,9 @@ class ChatChannelDeleteMembersView(generics.DestroyAPIView):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
         chat_channel.members.remove(user)
-        chat_channel.save()
+
+        if user in chat_channel.admins.all():
+            chat_channel.admins.remove(user)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -199,9 +206,10 @@ class ChatChannelAddAdminsView(generics.CreateAPIView):
     serializer_class = ChatChannelAdminsModifyRequestSerializer
 
     def get_queryset(self):
-        hashed_value = self.kwargs.get('workspace__hashed_value', None)
-        channel_name = self.kwargs.get('channel_name', None)
-        result = self.queryset.get(workspace__hashed_value=hashed_value, name__exact=channel_name)
+        workspace_hashed_value = self.kwargs.get('workspace__hashed_value', None)
+        channel_hashed_value = self.kwargs.get('channel__hashed_value', None)
+        result = self.queryset.get(workspace__hashed_value=workspace_hashed_value,
+                                   hashed_value__exact=channel_hashed_value)
         return result
 
     @swagger_auto_schema(responses={
@@ -213,7 +221,7 @@ class ChatChannelAddAdminsView(generics.CreateAPIView):
         기존에 `admins`에 포함 되지 않은 유저는 추가 할 수 없고, 401이 반환 됩니다.
         """
         chat_channel: ChatChannel = self.get_queryset()
-        users = []
+        users: [CustomUser] = []
         try:
             for user in request.data.get('admins_usernames', None):
                 username = user.get("username", None)
@@ -225,7 +233,10 @@ class ChatChannelAddAdminsView(generics.CreateAPIView):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
         chat_channel.admins.add(*users)
-        chat_channel.save()
+
+        for user in users:
+            if user not in chat_channel.members.all():
+                chat_channel.members.add(user)
 
         serializer = ChatChannelSerializer(chat_channel)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -237,9 +248,10 @@ class ChatChannelDeleteAdminsView(generics.DestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        hashed_value = self.kwargs.get('workspace__hashed_value', None)
-        channel_name = self.kwargs.get('channel_name', None)
-        result = self.queryset.get(workspace__hashed_value=hashed_value, name__exact=channel_name)
+        workspace_hashed_value = self.kwargs.get('workspace__hashed_value', None)
+        channel_hashed_value = self.kwargs.get('channel__hashed_value', None)
+        result = self.queryset.get(workspace__hashed_value=workspace_hashed_value,
+                                   hashed_value__exact=channel_hashed_value)
         return result
 
     def delete(self, request: Request, *args, **kwargs):
@@ -257,6 +269,5 @@ class ChatChannelDeleteAdminsView(generics.DestroyAPIView):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
         chat_channel.admins.remove(user)
-        chat_channel.save()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
