@@ -1,41 +1,30 @@
-from notifications.models import Notification
 from notifications.parser import Parser
 
 
-def notify(sender, channel=None):
+def notify(sender, channel=None, receiver=None):
     """
     create notification with provided `sender`,`channel`
     find where the sender belongs to, and create multiple notifications by receiver
+
+    :param int sender: id of sender
+    :param channel: id of channel
+    :param receiver: id of receiver
     """
-    Notification.objects.save_group(Parser.creation(sender=sender, channel=channel))
+
+    return Parser.create_via_sender(sender=sender, channel=channel, receiver=receiver)
 
 
-def create_notification_list(receiver) -> list(dict()):
+def get_notification_list(receiver) -> list(dict()):
     """
     get notifications belongs to user
     """
 
-    sources = Parser.sources(receiver)
-
-    result = list()
-
-    for entry in sources:
-        if entry.channel == None:
-            result.append(
-                dm=entry.sender, count=Notification.objects.get_by_source(entry).count()
-            )
-        else:
-            result.append(
-                channel=entry.channel,
-                count=Notification.objects.get_by_source(entry).count(),
-            )
-
-    return result
+    return Parser.get_via_receiver(receiver)
 
 
-def read(receiver, sender, channel):
+def read_notification_list(receiver, sender=None, channel=None):
     """
     find notifications and set them to had read
     """
 
-    Notification.objects.read_group(receiver=receiver, sender=sender, channel=channel)
+    Parser.read_notification_list(receiver=receiver, sender=sender, channel=channel)

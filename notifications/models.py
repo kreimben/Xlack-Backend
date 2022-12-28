@@ -16,28 +16,27 @@ class Notification(models.Model):
     # id will be created automatically
 
     receiver = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notification"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="notification_receiver",
     )
     sender = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notification"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="notification_sender",
     )
     channel = models.ForeignKey(
         ChatChannel,
         on_delete=models.CASCADE,
-        related_name="notification",
+        related_name="notification_channel",
         default=None,
+        null=True,
         blank=True,  # if it's a DM
     )
 
     had_read = models.BooleanField(default=False)
 
-    objects = NotificationManger
+    objects = NotificationManger()
 
-    # do we have to add datetime?
-    # to filter more?
-    # created_at = models.DateTimeField(auto_now_add=True)
-
-    # TODO: adding messege as foreignkey, to reverse refer
-    # messege = models.ForeignKey(
-    #     Chat, on_delete=models.CASCADE, related_name="notfication"
-    # )
+    def __str__(self):
+        return f"[{self.sender}@{self.channel} send to {self.receiver} and read={self.had_read}]"
