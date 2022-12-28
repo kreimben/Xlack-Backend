@@ -33,7 +33,7 @@ class NotificationsConsumer(AsyncJsonWebsocketConsumer):
                 raise TokenError
         except TokenError:
 
-            print("Authorization token not found!")
+            self.send_json(content={"msg": "access token Not found."}, close=True)
             self.close()
             return
 

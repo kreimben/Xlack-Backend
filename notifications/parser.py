@@ -17,7 +17,6 @@ class Parser:
         creation of notifications,
         with provided sender and channel
         """
-        print("Parser.notify kwargs:" + str(kwargs))
         sender = kwargs.get("sender", None)
         channel_id = kwargs.get("channel", None)
         receiver_id = kwargs.get("receiver", None)
@@ -39,7 +38,6 @@ class Parser:
             .values_list("members", flat=True)
             # qurreyset <list of id>
         )
-        print("[Parser._create_list_for_save]>> id_of_members:" + str(id_of_members))
 
         result = list()
         channel = ChatChannel.objects.get(id=channel_id)
@@ -53,9 +51,6 @@ class Parser:
                         had_read=False,
                     )
                 )
-            else:
-                print("filtering self id : ", sender.id)
-        print("result: " + str(result))
 
         return Notification.objects.save_group(result)
 
@@ -68,8 +63,6 @@ class Parser:
         else:
             _receiver = receiver
 
-        print("Parser.sources>>receiver: ", _receiver)
-
         channel_list = list(  # list of channel's id
             Notification.objects.filter(
                 Q(had_read=False), Q(receiver=_receiver), ~Q(channel=None)
@@ -77,7 +70,6 @@ class Parser:
             .values_list("channel", flat=True)
             .distinct()
         )
-        print("Parser.get_via_receiver>>list of channel : ", str(channel_list))
         sender_list = list(  # list of sender's id
             Notification.objects.filter(
                 Q(had_read=False), Q(receiver=_receiver), Q(channel=None)
@@ -85,7 +77,6 @@ class Parser:
             .values_list("sender", flat=True)
             .distinct()
         )
-        print("Parser.get_via_receiver>>list of dm sender : ", str(sender_list))
 
         result = list()
         for channel_id in channel_list:
@@ -112,8 +103,6 @@ class Parser:
                     ).count(),
                 )
             )
-
-        print("Paser:result", str(result))
 
         return result
 

@@ -39,4 +39,4 @@ class Notification(models.Model):
     objects = NotificationManger()
 
     def __str__(self):
-        return f"[{self.sender}@{self.channel} send to {self.receiver} and read={self.had_read}]"
+        return f"{self.sender}@{self.channel} send to {self.receiver},read={self.had_read}]"
