@@ -18,7 +18,7 @@ class Parser:
         with provided sender and channel
         """
         sender = kwargs.get("sender", None)
-        channel_hash = kwargs.get("channel", None)
+        channel = kwargs.get("channel", None)
         receiver = kwargs.get("receiver", None)
         chat = kwargs.get("chat", None)
 
@@ -27,7 +27,7 @@ class Parser:
         if type(receiver) == int:
             receiver = CustomUser.objects.get(id=receiver)
         if type(channel) == str:
-            channel = ChatChannel.objects.get(hashed_value=channel_hash)
+            channel = ChatChannel.objects.get(hashed_value=channel)
 
         _is_dm = True if channel == None else False
 

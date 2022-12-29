@@ -6,6 +6,7 @@ from drf_yasg.openapi import Schema, TYPE_OBJECT, TYPE_NUMBER, TYPE_STRING
 from drf_yasg.utils import swagger_auto_schema
 
 from notifications import api
+from notifications.serializers import NotificationSerialser
 import json
 
 
@@ -68,7 +69,7 @@ class NotificationView(
         request_body=Schema(
             type=TYPE_OBJECT,
             properties={
-                "dm": Schema(type=TYPE_NUMBER, description="id_of_dm_sender"),
+                "dm": Schema(type=TYPE_NUMBER, description="id_of_dm_receiver"),
                 "channel": Schema(
                     type=TYPE_STRING, description="hashed_value of channel"
                 ),
@@ -79,27 +80,32 @@ class NotificationView(
         """
         Debug use only,
         create notification directly.
-        if it's DM, {dm = "id_of_sender"}
+        if it's DM, {dm = "id_of_receiver"}
         if it's channel msg, {channel = "hashed_value of channel"}
         only one sources are allowed
         """
 
         sender = request.user
         channel = request.data.get("channel", None)
-        receiver = request.data.get("receiver", None)
+        receiver = request.data.get("dm", None)
 
         if channel == None and receiver == None:
             return JsonResponse(
-                data={"msg": "no sources (channel and DM sender)"},
+                data={"msg": "no sources (channel and DM receiver)"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if receiver != None and receiver != None:
+        if channel != None and receiver != None:
             return JsonResponse(
                 data={"msg": "duplicate sources"}, status=status.HTTP_400_BAD_REQUEST
             )
 
+        api.notify(sender, channel=channel, receiver=receiver)
+
         return JsonResponse(
-            json.dumps(api.notify(sender, channel=channel, receiver=receiver)),
+            data={"msg": "notification created"},
             safe=False,
         )
+
+    def get_serializer_class(self):
+        return NotificationSerialser
