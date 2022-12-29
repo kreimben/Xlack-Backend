@@ -36,7 +36,9 @@ class NotificationView(
             type=TYPE_OBJECT,
             properties={
                 "dm": Schema(type=TYPE_NUMBER, description="id_of_dm_sender"),
-                "channel": Schema(type=TYPE_STRING, description="id_of_channel"),
+                "channel": Schema(
+                    type=TYPE_STRING, description="hashed_value of channel"
+                ),
             },
         )
     )
