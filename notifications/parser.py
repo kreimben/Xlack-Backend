@@ -35,15 +35,15 @@ class Parser:
                 sender=sender, receiver=receiver, channel=None, had_read=False
             )
 
-        id_of_members = channel.members_id
+        members = channel.members
 
         result = list()
-        for member_id in id_of_members:
-            if member_id != sender.id:
+        for member in members:
+            if member != sender:
                 result.append(
                     Notification(
                         sender=sender,
-                        receiver=CustomUser.objects.get(id=member_id),
+                        receiver=member,
                         channel=channel,
                         had_read=False,
                     )
