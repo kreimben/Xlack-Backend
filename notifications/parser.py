@@ -18,29 +18,26 @@ class Parser:
         with provided sender and channel
         """
         sender = kwargs.get("sender", None)
-        channel_id = kwargs.get("channel", None)
-        receiver_id = kwargs.get("receiver", None)
+        channel = kwargs.get("channel", None)
+        receiver = kwargs.get("receiver", None)
 
         if type(sender) == int:
             sender = CustomUser.objects.get(id=sender)
+        if type(receiver) == int:
+            receiver = CustomUser.objects.get(id=receiver)
+        if type(channel) == int:
+            channel = ChatChannel.objects.get(id=channel)
 
-        _is_dm = True if channel_id == None else False
+        _is_dm = True if channel == None else False
 
         if _is_dm:  # if it's dm, just save
-            receiver = CustomUser.objects.get(id=receiver_id)
             return Notification.objects.create(
                 sender=sender, receiver=receiver, channel=None, had_read=False
             )
 
-        id_of_members = (
-            ChatChannel.objects.prefetch_related("members")
-            .filter(id=channel_id)
-            .values_list("members", flat=True)
-            # qurreyset <list of id>
-        )
+        id_of_members = channel.members_id
 
         result = list()
-        channel = ChatChannel.objects.get(id=channel_id)
         for member_id in id_of_members:
             if member_id != sender.id:
                 result.append(
