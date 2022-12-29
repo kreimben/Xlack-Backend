@@ -2,6 +2,9 @@ from django.http import JsonResponse
 from rest_framework import status, generics, permissions
 from rest_framework.request import Request
 
+from drf_yasg.openapi import Schema, TYPE_OBJECT, TYPE_NUMBER
+from drf_yasg.utils import swagger_auto_schema
+
 from notifications import api
 import json
 
@@ -27,6 +30,15 @@ class NotificationView(
                 json.dumps(api.get_notification_list(receiver)), safe=False
             )
 
+    @swagger_auto_schema(
+        request_body=Schema(
+            type=TYPE_OBJECT,
+            properties={
+                "dm": Schema(type=TYPE_NUMBER, description="id_of_dm_sender"),
+                "channel": Schema(type=TYPE_NUMBER, description="id_of_channel"),
+            },
+        )
+    )
     def patch(self, request: Request, *args, **kwargs):
         """
         Read Notification list via sources,
@@ -52,6 +64,15 @@ class NotificationView(
 
         return JsonResponse(json.dumps(api.get_notification_list(receiver)), safe=False)
 
+    @swagger_auto_schema(
+        request_body=Schema(
+            type=TYPE_OBJECT,
+            properties={
+                "dm": Schema(type=TYPE_NUMBER, description="id_of_dm_sender"),
+                "channel": Schema(type=TYPE_NUMBER, description="id_of_channel"),
+            },
+        )
+    )
     def post(self, request: Request, *args, **kwargs):
         """
         Debug use only,
