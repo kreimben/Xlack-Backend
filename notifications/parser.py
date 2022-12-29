@@ -35,7 +35,7 @@ class Parser:
                 sender=sender, receiver=receiver, channel=None, had_read=False
             )
 
-        members = channel.members
+        members = list(channel.members.all())
 
         result = list()
         for member in members:
