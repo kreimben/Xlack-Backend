@@ -14,11 +14,11 @@ from notifications import api
 class NotificationsConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def _create_notification_list(user_id):
-        api.create_notification_list(user_id)
+        api.get_notification_list(user_id)
 
     @database_sync_to_async
     def _read(user_id, sender, channel):
-        api.read(receiver=user_id, sender=sender, channel=channel)
+        api.read_notification_list(receiver=user_id, sender=sender, channel=channel)
 
     @database_sync_to_async
     def _refresh(self, user_id):

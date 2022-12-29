@@ -34,8 +34,10 @@ class NotificationManger(Manager):
         receiver = kwargs.get("receiver", None)
 
         if channel != None:  # not a dm
-            if type(channel) == int:
-                return self.get_by_recevier(receiver).filter(Q(channel_id=channel))
+            if type(channel) == str:
+                return self.get_by_recevier(receiver).filter(
+                    Q(channel__hashed_value=channel)
+                )
             return self.get_by_recevier(receiver).filter(Q(channel=channel))
         else:  # find dm
             if type(sender) == int:

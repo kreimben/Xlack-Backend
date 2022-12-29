@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from rest_framework import status, generics, permissions
 from rest_framework.request import Request
 
-from drf_yasg.openapi import Schema, TYPE_OBJECT, TYPE_NUMBER
+from drf_yasg.openapi import Schema, TYPE_OBJECT, TYPE_NUMBER, TYPE_STRING
 from drf_yasg.utils import swagger_auto_schema
 
 from notifications import api
@@ -35,7 +35,7 @@ class NotificationView(
             type=TYPE_OBJECT,
             properties={
                 "dm": Schema(type=TYPE_NUMBER, description="id_of_dm_sender"),
-                "channel": Schema(type=TYPE_NUMBER, description="id_of_channel"),
+                "channel": Schema(type=TYPE_STRING, description="id_of_channel"),
             },
         )
     )
@@ -43,7 +43,7 @@ class NotificationView(
         """
         Read Notification list via sources,
         if it's DM, {dm = "id_of_sender"}
-        if it's channel msg, {channel = "id_of_channel"}
+        if it's channel msg, {channel = "hashed value"}
         only one sources are allowed
         """
         receiver = request.user
@@ -69,7 +69,9 @@ class NotificationView(
             type=TYPE_OBJECT,
             properties={
                 "dm": Schema(type=TYPE_NUMBER, description="id_of_dm_sender"),
-                "channel": Schema(type=TYPE_NUMBER, description="id_of_channel"),
+                "channel": Schema(
+                    type=TYPE_STRING, description="hashed_value of channel"
+                ),
             },
         )
     )
@@ -78,7 +80,7 @@ class NotificationView(
         Debug use only,
         create notification directly.
         if it's DM, {dm = "id_of_sender"}
-        if it's channel msg, {channel = "id_of_channel"}
+        if it's channel msg, {channel = "hashed_value of channel"}
         only one sources are allowed
         """
 

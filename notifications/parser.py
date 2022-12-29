@@ -18,21 +18,26 @@ class Parser:
         with provided sender and channel
         """
         sender = kwargs.get("sender", None)
-        channel = kwargs.get("channel", None)
+        channel_hash = kwargs.get("channel", None)
         receiver = kwargs.get("receiver", None)
+        chat = kwargs.get("chat", None)
 
         if type(sender) == int:
             sender = CustomUser.objects.get(id=sender)
         if type(receiver) == int:
             receiver = CustomUser.objects.get(id=receiver)
-        if type(channel) == int:
-            channel = ChatChannel.objects.get(id=channel)
+        if type(channel) == str:
+            channel = ChatChannel.objects.get(hashed_value=channel_hash)
 
         _is_dm = True if channel == None else False
 
         if _is_dm:  # if it's dm, just save
             return Notification.objects.create(
-                sender=sender, receiver=receiver, channel=None, had_read=False
+                sender=sender,
+                receiver=receiver,
+                channel=None,
+                chat=chat,
+                had_read=False,
             )
 
         members = list(channel.members.all())
@@ -45,6 +50,7 @@ class Parser:
                         sender=sender,
                         receiver=member,
                         channel=channel,
+                        chat=chat,
                         had_read=False,
                     )
                 )
@@ -60,11 +66,11 @@ class Parser:
         else:
             _receiver = receiver
 
-        channel_list = list(  # list of channel's id
+        channel_list = list(  # hashed_value list of channel
             Notification.objects.filter(
                 Q(had_read=False), Q(receiver=_receiver), ~Q(channel=None)
             )
-            .values_list("channel", flat=True)
+            .values_list("channel__hashed_value", flat=True)
             .distinct()
         )
         sender_list = list(  # list of sender's id
@@ -76,14 +82,14 @@ class Parser:
         )
 
         result = list()
-        for channel_id in channel_list:
+        for channel in channel_list:
             result.append(
                 dict(
-                    channel=channel_id,
+                    channel=channel,
                     count=Notification.objects.filter(
                         Q(had_read=False),
                         Q(receiver=_receiver),
-                        Q(channel_id=channel_id),
+                        Q(channel__hashed_value=channel),
                     ).count(),
                 )
             )
