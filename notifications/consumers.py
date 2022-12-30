@@ -1,5 +1,3 @@
-import json
-
 from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
 from channels.exceptions import StopConsumer
@@ -17,7 +15,9 @@ class NotificationsConsumer(AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     def _read(self, user_id, sender, channel):
-        return api.read_notification_list(receiver=user_id, sender=sender, channel=channel)
+        return api.read_notification_list(
+            receiver=user_id, sender=sender, channel=channel
+        )
 
     @database_sync_to_async
     def _refresh(self, user_id):
@@ -29,20 +29,20 @@ class NotificationsConsumer(AsyncJsonWebsocketConsumer):
         try:
             user = await sync_to_async(AuthHelper.find_user)(self.scope)
             if user is None:
-                print(f'{user=}')
+                print(f"{user=}")
                 return
         except AccessTokenNotIncludedInHeader:
-            print(f'access token was not in header.')
+            print(f"access token was not in header.")
             return
         except CustomUser.DoesNotExist:
-            print(f'No such user.')
+            print(f"No such user.")
             return
 
         list_of_notification = await self._create_notification_list(user.id)
 
         await self.accept()
 
-        await self.send_json(list_of_notification)
+        await self.send_json(content=list_of_notification)
 
     async def receive_json(self, content):
         """
@@ -52,16 +52,19 @@ class NotificationsConsumer(AsyncJsonWebsocketConsumer):
         try:
             user = await sync_to_async(AuthHelper.find_user)(self.scope)
         except AccessTokenNotIncludedInHeader:
-            print(f'access token was not in header.')
-            await self.send_json(content={'msg': 'access token was not in header.'}, close=True)
+            print(f"access token was not in header.")
+            await self.send_json(
+                content={"msg": "access token was not in header."}, close=True
+            )
             return
         except CustomUser.DoesNotExist:
-            print(f'No such user.')
-            await self.send_json(content={'msg': 'No such user.'}, close=True)
+            print(f"No such user.")
+            await self.send_json(content={"msg": "No such user."}, close=True)
             return
 
         if content.refresh:
-            await self._refresh(user.id)
+            new_notifications = await self._refresh(user.id)
+            await self.send_json(content=new_notifications)
 
         else:
             if content.sender and content.channel == None:

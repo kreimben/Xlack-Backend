@@ -1,5 +1,5 @@
 # notifications/parser.py
-from typing import Dict
+from typing import Dict, List
 
 from django.db.models import Q, Count
 
@@ -59,7 +59,7 @@ class Parser:
 
         return Notification.objects.save_group(result)
 
-    def get_via_receiver(receiver) -> [Dict]:
+    def get_via_receiver(receiver) -> List[Dict]:
         """
         create notification sources via receiver
         """
@@ -75,17 +75,16 @@ class Parser:
             .distinct()
         )
 
-
         result = []
         for channel in channels:
             result.append(
                 dict(
                     channel_hashed_value=channel,
                     count=Notification.objects.filter(
-                        Q(had_read=False)&
-                        Q(receiver=_receiver)&
-                        Q(channel__hashed_value__exact=channel)
-                    ).count()
+                        Q(had_read=False)
+                        & Q(receiver=_receiver)
+                        & Q(channel__hashed_value__exact=channel)
+                    ).count(),
                 )
             )
         return result
