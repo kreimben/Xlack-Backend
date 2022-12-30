@@ -1,9 +1,11 @@
 # notifications/parser.py
+from typing import Dict
+
+from django.db.models import Q, Count
 
 from chat_channel.models import ChatChannel
-from notifications.models import Notification
 from custom_user.models import CustomUser
-from django.db.models import Q
+from notifications.models import Notification
 
 
 class Parser:
@@ -57,7 +59,7 @@ class Parser:
 
         return Notification.objects.save_group(result)
 
-    def get_via_receiver(receiver) -> list(dict()):
+    def get_via_receiver(receiver) -> [Dict]:
         """
         create notification sources via receiver
         """
@@ -66,49 +68,27 @@ class Parser:
         else:
             _receiver = receiver
 
-        channel_list = list(  # hashed_value list of channel
-            Notification.objects.filter(
-                Q(had_read=False), Q(receiver=_receiver), ~Q(channel=None)
-            )
+        channels = list(  # hashed_value list of channel
+            Notification.objects.filter(Q(had_read=False) & Q(receiver=_receiver))
+            .exclude(Q(channel=None))
             .values_list("channel__hashed_value", flat=True)
             .distinct()
         )
-        sender_list = list(  # list of sender's id
-            Notification.objects.filter(
-                Q(had_read=False), Q(receiver=_receiver), Q(channel=None)
-            )
-            .values_list("sender", flat=True)
-            .distinct()
-        )
 
-        result = list()
-        for channel in channel_list:
+
+        result = []
+        for channel in channels:
             result.append(
                 dict(
-                    channel=channel,
+                    channel_hashed_value=channel,
                     count=Notification.objects.filter(
-                        Q(had_read=False),
-                        Q(receiver=_receiver),
-                        Q(channel__hashed_value=channel),
-                    ).count(),
+                        Q(had_read=False)&
+                        Q(receiver=_receiver)&
+                        Q(channel__hashed_value__exact=channel)
+                    ).count()
                 )
             )
-
-        for sender_id in sender_list:
-            result.append(
-                dict(
-                    dm=sender_id,
-                    count=Notification.objects.filter(
-                        Q(had_read=False),
-                        Q(receiver=_receiver),
-                        Q(channel=None),
-                        Q(sender_id=sender_id),
-                    ).count(),
-                )
-            )
-
         return result
 
     def read_notification_list(**kwargs):
-
         return Notification.objects.read_group(**kwargs)
