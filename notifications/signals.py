@@ -17,4 +17,4 @@ def create_notifications(sender: Chat, **kwargs):
     """
     chat: Chat = kwargs.get("instance", None)
 
-    response = api.notify(chat.chatter, chat.channel)
+    response = api.notify(sender=chat.chatter, chat=chat, channel=chat.channel)
