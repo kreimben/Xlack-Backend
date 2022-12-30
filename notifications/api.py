@@ -1,3 +1,5 @@
+from typing import Dict
+
 from notifications.parser import Parser
 
 
@@ -16,7 +18,7 @@ def notify(sender, chat=None, channel=None, receiver=None):
     )
 
 
-def get_notification_list(receiver) -> list(dict()):
+def get_notification_list(receiver) -> [Dict]:
     """
     get notifications belongs to user
     """
