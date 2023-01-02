@@ -14,7 +14,8 @@ schema_view = get_schema_view(
         contact=openapi.Contact(email="aksidion@kreimben.com"),
         license=openapi.License(name="MIT"),
     ),
-    public=True,
+    url='https://api.xlack.kreimben.com/docs/',
+    public=False,
     permission_classes=[permissions.IsAuthenticated],
 )
 
