@@ -1,6 +1,5 @@
 from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
-from channels.exceptions import StopConsumer
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 from AuthHelper import AuthHelper, AccessTokenNotIncludedInHeader
@@ -10,7 +9,7 @@ from notifications import api
 
 class NotificationsConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
-    def _create_notification_list(self, user_id):
+    def _get_notification_list(self, user_id):
         return api.get_notification_list(user_id)
 
     @database_sync_to_async
@@ -19,18 +18,19 @@ class NotificationsConsumer(AsyncJsonWebsocketConsumer):
             receiver=user_id, sender=sender, channel=channel
         )
 
-    @database_sync_to_async
-    def _refresh(self, user_id):
-        list_of_notification = self._create_notification_list(user_id)
-        return list_of_notification
-
     async def connect(self):
+        self.room_group_name = ''
         # check auth token
         try:
             user = await sync_to_async(AuthHelper.find_user)(self.scope)
             if user is None:
                 print(f"{user=}")
                 return
+            self.room_group_name = f'{user.id}'
+            await self.channel_layer.group_add(
+                self.room_group_name,
+                self.channel_name
+            )
         except AccessTokenNotIncludedInHeader:
             print(f"access token was not in header.")
             return
@@ -38,17 +38,13 @@ class NotificationsConsumer(AsyncJsonWebsocketConsumer):
             print(f"No such user.")
             return
 
-        list_of_notification = await self._create_notification_list(user.id)
+        list_of_notification = await self._get_notification_list(user.id)
 
         await self.accept()
 
         await self.send_json(content=list_of_notification)
 
-    async def receive_json(self, content):
-        """
-        Find user model using access token
-        and
-        """
+    async def receive_json(self, content, **kwargs):
         try:
             user = await sync_to_async(AuthHelper.find_user)(self.scope)
         except AccessTokenNotIncludedInHeader:
@@ -62,20 +58,18 @@ class NotificationsConsumer(AsyncJsonWebsocketConsumer):
             await self.send_json(content={"msg": "No such user."}, close=True)
             return
 
-        if content.refresh:
-            new_notifications = await self._refresh(user.id)
-            await self.send_json(content=new_notifications)
+        if content.get('refresh', None) == True:
+            r = await self._get_notification_list(user.id)
+            await self.send_json(r)
+        elif content.get('had_read', None) is not None and content.get('notification_id', None) is not None:
+            ...
 
-        else:
-            if content.sender and content.channel == None:
-                await self.send_json(content={"msg": "sender and channel are invalid."})
-            else:
-                await self._read(
-                    receiver=user.id, sender=content.sender, channel=content.channel
-                )
-                new_notifications = await self._refresh(user.id)
+    async def notifications_broadcast(self, event):
+        r = await self._get_notification_list(event.get('user_id', None))
+        await self.send_json(r)
 
-                await self.send_json(content=new_notifications)
-
-    def disconnect(self, code):
-        raise StopConsumer()
+    async def disconnect(self, code):
+        self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
