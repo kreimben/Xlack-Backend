@@ -3,6 +3,7 @@ from typing import Dict, List
 
 from django.db.models import Q, Count
 
+from chat.models import Chat
 from chat_channel.models import ChatChannel
 from custom_user.models import CustomUser
 from notifications.models import Notification
@@ -13,34 +14,16 @@ class Parser:
     Parsing arguments
     """
 
-    def create_via_sender(*args, **kwargs) -> list():
+    @staticmethod
+    def create_via_sender(sender_id: int, channel_hashed_value: str, chat: Chat) -> []:
         """
         Parsing argument for
         creation of notifications,
         with provided sender and channel
         """
-        sender = kwargs.get("sender", None)
-        channel = kwargs.get("channel", None)
-        receiver = kwargs.get("receiver", None)
-        chat = kwargs.get("chat", None)
 
-        if type(sender) == int:
-            sender = CustomUser.objects.get(id=sender)
-        if type(receiver) == int:
-            receiver = CustomUser.objects.get(id=receiver)
-        if type(channel) == str:
-            channel = ChatChannel.objects.get(hashed_value=channel)
-
-        _is_dm = True if channel == None else False
-
-        if _is_dm:  # if it's dm, just save
-            return Notification.objects.create(
-                sender=sender,
-                receiver=receiver,
-                channel=None,
-                chat=chat,
-                had_read=False,
-            )
+        sender = CustomUser.objects.get(id=sender_id)
+        channel: ChatChannel = ChatChannel.objects.get(hashed_value__exact=channel_hashed_value)
 
         members = list(channel.members.all())
 
@@ -59,6 +42,7 @@ class Parser:
 
         return Notification.objects.save_group(result)
 
+    @staticmethod
     def get_via_receiver(receiver) -> List[Dict]:
         """
         create notification sources via receiver

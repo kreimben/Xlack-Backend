@@ -6,7 +6,7 @@ from drf_yasg.openapi import Schema, TYPE_OBJECT, TYPE_NUMBER, TYPE_STRING
 from drf_yasg.utils import swagger_auto_schema
 
 from notifications import api
-from notifications.serializers import NotificationSerialser
+from notifications.serializers import NotificationSerializer
 import json
 
 
@@ -110,4 +110,4 @@ class NotificationView(
         )
 
     def get_serializer_class(self):
-        return NotificationSerialser
+        return NotificationSerializer
