@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'status.apps.StatusConfig',
     'custom_user.apps.CustomUserConfig',
     'file.apps.FileConfig',
+    'notifications.apps.NotificationsConfig',
 
     # Apps we installed.
     'rest_framework',
