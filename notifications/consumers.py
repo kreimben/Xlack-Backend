@@ -5,6 +5,7 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from AuthHelper import AuthHelper, AccessTokenNotIncludedInHeader
 from custom_user.models import CustomUser
 from notifications import api
+from notifications.models import Notification
 
 
 class NotificationsConsumer(AsyncJsonWebsocketConsumer):
@@ -17,6 +18,14 @@ class NotificationsConsumer(AsyncJsonWebsocketConsumer):
         return api.read_notification_list(
             receiver=user_id, sender=sender, channel=channel
         )
+
+    @database_sync_to_async
+    def _read_notification(self, receiver_id: int, channel_hashed_value: str):
+        notifications: [Notification] = Notification.objects.filter(receiver_id=receiver_id,
+                                                                    channel__hashed_value=channel_hashed_value)
+        for noti in notifications:
+            noti.had_read = True
+            noti.save()
 
     async def connect(self):
         self.room_group_name = ''
@@ -58,11 +67,13 @@ class NotificationsConsumer(AsyncJsonWebsocketConsumer):
             await self.send_json(content={"msg": "No such user."}, close=True)
             return
 
-        if content.get('refresh', None) == True:
+        if content.get('refresh', None) is True:
             r = await self._get_notification_list(user.id)
             await self.send_json(r)
-        elif content.get('had_read', None) is not None and content.get('notification_id', None) is not None:
-            ...
+        elif content.get('channel_hashed_value', None) is not None:
+            channel_hashed_value = content.get('channel_hashed_value', None)
+            await self._read_notification(receiver_id=user.id, channel_hashed_value=channel_hashed_value)
+            await self.send_json({'msg': 'OK'})
 
     async def notifications_broadcast(self, event):
         r = await self._get_notification_list(event.get('user_id', None))
