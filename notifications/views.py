@@ -28,7 +28,7 @@ class NotificationView(
             )
         else:
             return JsonResponse(
-                json.dumps(api.get_notification_list(receiver)), safe=False
+                api.get_notification_list(receiver), safe=False
             )
 
     @swagger_auto_schema(
