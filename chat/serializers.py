@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
 from chat.models import Chat, ChatBookmark
-from chat_channel.serializers import ChatChannelSerializer
 from custom_user.serializers import CustomUserSerializer
 
 
@@ -10,10 +9,7 @@ class ChatSerializer(serializers.Serializer):
     channel = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
     has_bookmarked = serializers.BooleanField(read_only=True)
     chatter = CustomUserSerializer(many=False, read_only=True)
-
-    class Meta:
-        # model = Chat
-        fields = '__all__'
+    created_at = serializers.DateTimeField(read_only=True)
 
     def create(self, validated_data):
         data = {}
