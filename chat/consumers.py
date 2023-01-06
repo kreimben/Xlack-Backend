@@ -53,7 +53,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_send(
             self.room_group_name,
             {
-                'type': 'speak',
+                'type': 'chat.broadcast',
                 'username': user.username,
                 'user_id': user.id,
                 'message': chat.message,
@@ -61,7 +61,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             }
         )
 
-    async def speak(self, event):
+    async def chat_broadcast(self, event):
         """
         This function speaks message to every body in this group.
         """
