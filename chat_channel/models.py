@@ -4,6 +4,24 @@ from workspace.models import Workspace
 from xlack import settings
 
 
+class ChannelManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset() \
+            .select_related('workspace') \
+            .prefetch_related('members') \
+            .prefetch_related('admins') \
+            .filter(is_dm=False)
+
+
+class DMManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset() \
+            .select_related('workspace') \
+            .prefetch_related('members') \
+            .prefetch_related('admins') \
+            .filter(is_dm=True)
+
+
 # The reason I named `ChatChannel` is avoiding confusion with `django channels`.
 class ChatChannel(models.Model):
     name = models.CharField(max_length=50)
@@ -16,6 +34,10 @@ class ChatChannel(models.Model):
     admins = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='chat_channel_admins')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = models.Manager()
+    channel_objects = ChannelManager()
+    dm_objects = DMManager()
 
     class Meta:
         verbose_name = 'Channel'
