@@ -8,7 +8,9 @@ from xlack import settings
 class ChatChannel(models.Model):
     name = models.CharField(max_length=50)
     hashed_value = models.CharField(max_length=10, unique=True)
-    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, null=False, blank=False, related_name='chat_channel')
+    is_dm = models.BooleanField(default=False)
+    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, null=False, blank=False,
+                                  related_name='chat_channel')
     description = models.TextField(null=True, blank=True)
     members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='chat_channel_members')
     admins = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='chat_channel_admins')
