@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+
 class DMCreateSerializer(serializers.Serializer):
     def update(self, instance, validated_data):
         pass
