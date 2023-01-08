@@ -57,7 +57,7 @@ class ChatChannelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChatChannel
-        fields = ['id', 'name', 'hashed_value', 'description', 'members', 'admins']
+        fields = ['id', 'name', 'hashed_value', 'description', 'members', 'admins', 'is_dm']
 
     def create(self, validated_data):
         hashed_value = ''
