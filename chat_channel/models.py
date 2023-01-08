@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from django.db import models
 
 from workspace.models import Workspace
@@ -25,7 +27,7 @@ class DMManager(models.Manager):
 # The reason I named `ChatChannel` is avoiding confusion with `django channels`.
 class ChatChannel(models.Model):
     name = models.CharField(max_length=50)
-    hashed_value = models.CharField(max_length=10, unique=True)
+    hashed_value = models.CharField(max_length=10, unique=True, default=str(uuid4())[:8])
     is_dm = models.BooleanField(default=False)
     workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, null=False, blank=False,
                                   related_name='chat_channel')
