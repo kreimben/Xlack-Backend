@@ -8,7 +8,7 @@ from rest_framework import permissions
 
 class GithubLoginView(SocialLoginView):
     """
-    오직 code에만 값을 넣고 다른 것은 그냥 ""처리 하시면 됩니다.
+    오직 code에 클라이언트로 날아온 github code를 넣으면 됩니다.
     """
     adapter_class = GitHubOAuth2Adapter
     client_class = OAuth2Client
