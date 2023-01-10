@@ -256,6 +256,10 @@ REST_USE_JWT = True
 SITE_ID = 1
 JWT_AUTH_COOKIE_USE_CSRF = False
 
+REST_AUTH_SERIALIZERS = {
+    'USER_DETAILS_SERIALIZER': 'custom_user.serializers.CustomUserSerializer'
+}
+
 AUTHENTICATION_BACKENDS = [
     # Needed to login by username in Django admin, regardless of `allauth`
     'django.contrib.auth.backends.ModelBackend',
