@@ -1,5 +1,6 @@
 import os
 
+from dj_rest_auth.registration.views import SocialAccountListView
 from django.contrib import admin
 from django.urls import path, include
 from drf_yasg import openapi
@@ -24,6 +25,7 @@ urlpatterns = [
     # For OAuth2 Login and Registrations.
     path("accounts/", include("dj_rest_auth.urls")),
     path("token/", include("oauth2_token.urls")),
+    path("socialaccounts/", SocialAccountListView.as_view(), name="socialaccount_connections"),
     # Swagger Documentation.
     path(
         "docs/",
