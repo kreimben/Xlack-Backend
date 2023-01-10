@@ -253,9 +253,8 @@ SIMPLE_JWT = {
 }
 
 REST_USE_JWT = True
-JWT_AUTH_COOKIE = 'my-app-auth'
-JWT_AUTH_REFRESH_COOKIE = 'my-refresh-token'
 SITE_ID = 1
+JWT_AUTH_COOKIE_USE_CSRF = False
 
 AUTHENTICATION_BACKENDS = [
     # Needed to login by username in Django admin, regardless of `allauth`

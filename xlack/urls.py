@@ -21,11 +21,9 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path(f"{os.getenv('DJANGO_REAL_ADMIN_URI')}", admin.site.urls),
-    # Normal Login.
-    path("accounts/", include("rest_framework.urls", namespace="rest_framework")),
     # For OAuth2 Login and Registrations.
     path("accounts/", include("dj_rest_auth.urls")),
-    path("accounts/", include("allauth.urls")),
+    path("token/", include("oauth2_token.urls")),
     # Swagger Documentation.
     path(
         "docs/",
@@ -38,6 +36,5 @@ urlpatterns = [
     path("profile/", include("user_profile.urls")),
     path("status/", include("status.urls")),
     path("file/", include("file.urls")),
-    path("token/", include("oauth2_token.urls")),
     path("notifications/", include("notifications.urls")),
 ]
