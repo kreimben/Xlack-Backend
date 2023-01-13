@@ -15,7 +15,7 @@ schema_view = get_schema_view(
         contact=openapi.Contact(email="aksidion@kreimben.com"),
         license=openapi.License(name="MIT"),
     ),
-    url='https://api.xlack.kreimben.com/docs/',
+    url='https://api.xlack.kreimben.com/docs/' if not os.getenv('DJANGO_DEBUG') else 'http://127.0.0.1:8000/docs/',
     public=False,
     permission_classes=[permissions.IsAuthenticated],
 )
