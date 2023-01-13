@@ -1,12 +1,13 @@
 from rest_framework import serializers
 
+from custom_user.serializers import CustomUserSerializer
 from status.models import UserStatus
 from workspace.serializers import BaseWorkspaceSerializer
 
 
 class UserStatusSerializer(serializers.ModelSerializer):
     workspace = BaseWorkspaceSerializer(read_only=True)
-    user = serializers.PrimaryKeyRelatedField(read_only=True)  # TODO: Custom User 만들면 serializer도 같이 만들어서 여기에 넣기.
+    user = CustomUserSerializer()
 
     class Meta:
         model = UserStatus
