@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from chat.models import Chat, ChatBookmark
+from chat.models import Chat, ChatBookmark, ChatReaction
 from custom_user.serializers import CustomUserSerializer
 
 
@@ -25,9 +25,19 @@ class ChatSerializer(serializers.Serializer):
 
 
 class ChatBookmarkSerializer(serializers.ModelSerializer):
-    chat_id = serializers.PrimaryKeyRelatedField(many=False, queryset=Chat.objects.all())
+    chat_id = serializers.PrimaryKeyRelatedField(
+        many=False, queryset=Chat.objects.all())
     created_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = ChatBookmark
         fields = ['chat_id', 'created_at']
+
+
+class ChatReactionSerializer(serializers.ModelSerializer):
+    chat_id = serializers.PrimaryKeyRelatedField(
+        many=False, queryset=Chat.objects.all())
+
+    class Meta:
+        model = ChatReaction
+        fields = ['chat_id']
