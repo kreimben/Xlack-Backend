@@ -1,11 +1,8 @@
 from django.db import models
 
 from chat_channel.models import ChatChannel
-from custom_user.models import CustomUser
 from file.models import File
 from xlack import settings
-
-from django.utils import encoding
 
 
 class Chat(models.Model):
@@ -43,19 +40,18 @@ class ChatBookmark(models.Model):
 
 class ChatReaction(models.Model):
     chat = models.ForeignKey(
-        Chat, on_delete=models.CASCADE, related_name='reactions')
-    users = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, related_name='reaction_users')
-    reaction = models.CharField(max_length=10)
+        Chat, on_delete=models.CASCADE, related_name='reaction')
+    reactors = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name='reaction_users',
+        on_delete=models.CASCADE, null=False, blank=False)
+    icon = models.CharField(max_length=10, null=False, blank=False)
 
     class Meta:
         verbose_name = 'Chat Reaction'
         verbose_name_plural = 'Chat Reactions'
-
-    def save(self, *args, **kwargs):
-        """Convert an reaction to ASCII from unicode and save"""
-        self.reaction = encoding.iri_to_uri(self.reaction)
-        super().save(*args, **kwargs)
+        constraints = [
+            models.UniqueConstraint(fields=['chat', 'icon'])
+        ]
 
     def __str__(self):
-        return f'{self.chat}/({self.reaction})-({self.users}) '
+        return f'({self.reaction})-({self.reactors}) '

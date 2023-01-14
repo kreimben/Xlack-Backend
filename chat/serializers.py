@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 from chat.models import Chat, ChatBookmark, ChatReaction
 from custom_user.serializers import CustomUserSerializer
@@ -34,10 +35,24 @@ class ChatBookmarkSerializer(serializers.ModelSerializer):
         fields = ['chat_id', 'created_at']
 
 
-class ChatReactionSerializer(serializers.ModelSerializer):
-    chat_id = serializers.PrimaryKeyRelatedField(
-        many=False, queryset=Chat.objects.all())
+class ChatReactionSerializer(serializers.Serializer):
+    chat_id = serializers.PrimaryKeyRelatedField(many=False)
+    reactors = serializers.CustomUserSerializer(many=True)
+    icon = serializers.CharField(max_length=10)
+
+    def create(self, validated_data):
+        return ChatReaction.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.reactors = validated_data.get('reactors', instance.reactors)
+        instance.chat = validated_data.get('chat', instance.chat)
+        instance.icon = validated_data.get('reaction', instance.icon)
+        return instance
 
     class Meta:
-        model = ChatReaction
-        fields = ['chat_id']
+        validators = [
+            UniqueTogetherValidator(
+                queryset=ChatReaction.objects.all(),
+                fields=['chat', 'icon']
+            )
+        ]

@@ -1,11 +1,11 @@
-from rest_framework import generics, status
+from rest_framework import generics, status, permissions
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from chat.models import Chat, ChatBookmark
-from chat.serializers import ChatSerializer, ChatBookmarkSerializer
+from chat.models import Chat, ChatBookmark, ChatReaction
+from chat.serializers import ChatReactionSerializer, ChatSerializer, ChatBookmarkSerializer
 
 
 class ChatView(generics.ListAPIView):
@@ -36,7 +36,8 @@ class ChatView(generics.ListAPIView):
             s = self.get_serializer(q, many=True)
             for data in s.data[:]:
                 try:
-                    b = ChatBookmark.objects.get(issuer=self.request.user, chat_id=data['id'])
+                    b = ChatBookmark.objects.get(
+                        issuer=self.request.user, chat_id=data['id'])
                 except ChatBookmark.DoesNotExist:
                     b = None
                 data['has_bookmarked'] = True if b is not None else False
@@ -51,7 +52,8 @@ class ChatBookmarkCreateView(generics.CreateAPIView):
         s = self.get_serializer(data=request.data)
         if s.is_valid():
             chat_id = s.data.get('chat_id')
-            chat_bookmark, is_created = ChatBookmark.objects.get_or_create(issuer=request.user, chat_id=chat_id)
+            chat_bookmark, is_created = ChatBookmark.objects.get_or_create(
+                issuer=request.user, chat_id=chat_id)
             s = self.get_serializer(chat_bookmark)
             return Response(s.data)
         else:
@@ -64,6 +66,69 @@ class ChatBookmarkDeleteView(generics.DestroyAPIView):
 
     def delete(self, request: Request, *args, **kwargs):
         chat_id = kwargs.get('chat_id', None)
-        chat_bookmark = get_object_or_404(ChatBookmark, issuer=request.user, chat_id=chat_id)
+        chat_bookmark = get_object_or_404(
+            ChatBookmark, issuer=request.user, chat_id=chat_id)
         chat_bookmark.delete()
         return Response(status=status.HTTP_302_FOUND)
+
+
+class ChatReactionCreateView(generics.CreateAPIView):
+    """ Endpoint for creating new reaction or
+        adding user to existing reaction
+        (Debug use only)
+    """
+    queryset = ChatReaction.objects.all()
+    http_method_names = ['post']
+    serializer_class = ChatReactionSerializer
+
+    def post(self, request: Request, *args, **kwargs):
+        serial = self.get_serializer(data=request.data)
+        if serial.is_valid():
+            chat = serial.data.get('chat_id')
+            icon = serial.data.get('icon')
+
+            reaction, is_created = ChatReaction.objects.get_or_create(
+                chat_id=chat, icon=icon)
+
+            if request.user not in reaction.reactors.all():
+                reaction.reactors.add(request.user)
+                serial = self.get_serializer(reaction)
+                return Response(serial.data)
+            else:
+                return Response(serial.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            return Response(serial.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ChatReactionRemoveView(generics.DestroyAPIView):
+    """ Endpoint for removing user to existing reaction
+        (Debug use only)
+    """
+    queryset = ChatReaction.objects.all()
+    http_method_names = ['delete']
+    serializer_class = ChatReactionSerializer
+
+    def delete(self, request: Request, *args, **kwargs):
+
+        serial = self.get_serializer(data=request.data)
+
+        if serial.is_valid():
+            chat = serial.data.get('chat_id')
+            icon = serial.data.get('icon')
+
+            reaction = ChatReaction.objects.get(chat_id=chat, icon=icon)
+
+            if request.user not in reaction.reactors.all():
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            else:
+                reaction.reactors.remove(request.user)
+                if reaction.reactors.count() == 0:
+                    reaction.delete()
+                    return Response(status=status.HTTP_204_NO_CONTENT)
+                else:
+                    serial = self.get_serializer(reaction)
+                    return Response(serial.data)
+
+        else:
+            return Response(serial.errors, status=status.HTTP_400_BAD_REQUEST)
