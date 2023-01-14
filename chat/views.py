@@ -7,6 +7,9 @@ from rest_framework.response import Response
 from chat.models import Chat, ChatBookmark, ChatReaction
 from chat.serializers import ChatReactionSerializer, ChatSerializer, ChatBookmarkSerializer
 
+from drf_yasg.openapi import Schema, TYPE_OBJECT, TYPE_NUMBER, TYPE_STRING
+from drf_yasg.utils import swagger_auto_schema
+
 
 class ChatView(generics.ListAPIView):
     """
@@ -72,6 +75,17 @@ class ChatBookmarkDeleteView(generics.DestroyAPIView):
         return Response(status=status.HTTP_302_FOUND)
 
 
+@swagger_auto_schema(
+    request_body=Schema(
+        type=TYPE_OBJECT,
+        properties={
+            "chat_id": Schema(type=TYPE_NUMBER, description="id_of_chat"),
+            "icon": Schema(
+                type=TYPE_STRING, description="icon of reaction"
+            ),
+        },
+    )
+)
 class ChatReactionCreateView(generics.CreateAPIView):
     """ Endpoint for creating new reaction or
         adding user to existing reaction
@@ -101,6 +115,17 @@ class ChatReactionCreateView(generics.CreateAPIView):
             return Response(serial.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@swagger_auto_schema(
+    request_body=Schema(
+        type=TYPE_OBJECT,
+        properties={
+            "chat_id": Schema(type=TYPE_NUMBER, description="id_of_chat"),
+            "icon": Schema(
+                type=TYPE_STRING, description="icon_of_reaction"
+            ),
+        },
+    )
+)
 class ChatReactionRemoveView(generics.DestroyAPIView):
     """ Endpoint for removing user to existing reaction
         (Debug use only)
