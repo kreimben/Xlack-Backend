@@ -36,9 +36,9 @@ class ChatBookmarkSerializer(serializers.ModelSerializer):
 
 
 class ChatReactionSerializer(serializers.Serializer):
-    chat_id = serializers.PrimaryKeyRelatedField(many=False)
-    reactors = serializers.CustomUserSerializer(many=True)
-    icon = serializers.CharField(max_length=10)
+    chat_id = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
+    reactors = CustomUserSerializer(many=True, read_only=True)
+    icon = serializers.CharField(max_length=10, read_only=True)
 
     def create(self, validated_data):
         return ChatReaction.objects.create(**validated_data)

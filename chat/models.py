@@ -43,14 +43,15 @@ class ChatReaction(models.Model):
         Chat, on_delete=models.CASCADE, related_name='reaction')
     reactors = models.ManyToManyField(
         settings.AUTH_USER_MODEL, related_name='reaction_users',
-        on_delete=models.CASCADE, null=False, blank=False)
+    )
     icon = models.CharField(max_length=10, null=False, blank=False)
 
     class Meta:
         verbose_name = 'Chat Reaction'
         verbose_name_plural = 'Chat Reactions'
         constraints = [
-            models.UniqueConstraint(fields=['chat', 'icon'])
+            models.UniqueConstraint(
+                fields=['chat', 'icon'], name='unique_reaction')
         ]
 
     def __str__(self):
