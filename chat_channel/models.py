@@ -1,19 +1,45 @@
+from uuid import uuid4
+
 from django.db import models
 
 from workspace.models import Workspace
 from xlack import settings
 
 
+class ChannelManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset() \
+            .select_related('workspace') \
+            .prefetch_related('members') \
+            .prefetch_related('admins') \
+            .filter(is_dm=False)
+
+
+class DMManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset() \
+            .select_related('workspace') \
+            .prefetch_related('members') \
+            .prefetch_related('admins') \
+            .filter(is_dm=True)
+
+
 # The reason I named `ChatChannel` is avoiding confusion with `django channels`.
 class ChatChannel(models.Model):
     name = models.CharField(max_length=50)
-    hashed_value = models.CharField(max_length=10, unique=True)
-    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, null=False, blank=False, related_name='chat_channel')
+    hashed_value = models.CharField(max_length=10, unique=True, default=str(uuid4())[:8])
+    is_dm = models.BooleanField(default=False)
+    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, null=False, blank=False,
+                                  related_name='chat_channel')
     description = models.TextField(null=True, blank=True)
     members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='chat_channel_members')
     admins = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='chat_channel_admins')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = models.Manager()
+    channel_objects = ChannelManager()
+    dm_objects = DMManager()
 
     class Meta:
         verbose_name = 'Channel'
