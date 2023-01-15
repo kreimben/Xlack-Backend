@@ -43,8 +43,8 @@ class WorkspaceView(generics.CreateAPIView,
         자신이 가입한 workspace만 배열로 나옵니다.
         """
         workspaces = request.user.joined_workspaces.all()
-        serializers = [self.get_serializer(workspace) for workspace in workspaces]
-        return Response(data=[serializer.data for serializer in serializers])
+        s = self.get_serializer(workspaces, many=True)
+        return Response(s.data)
 
     @swagger_auto_schema(request_body=Schema(
         type=TYPE_OBJECT,

@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'custom_user.apps.CustomUserConfig',
     'file.apps.FileConfig',
     'notifications.apps.NotificationsConfig',
+    'direct_message.apps.DirectMessageConfig',
 
     # Apps we installed.
     'rest_framework',
