@@ -1,14 +1,11 @@
-from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
-from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
-from AuthHelper import AuthHelper, AccessTokenNotIncludedInHeader
-from custom_user.models import CustomUser
 from notifications import api
 from notifications.models import Notification
+from websocket.AuthWebsocketConsumer import AuthWebsocketConsumer
 
 
-class NotificationsConsumer(AsyncJsonWebsocketConsumer):
+class NotificationsConsumer(AuthWebsocketConsumer):
     @database_sync_to_async
     def _get_notification_list(self, user_id):
         return api.get_notification_list(user_id)
@@ -27,60 +24,33 @@ class NotificationsConsumer(AsyncJsonWebsocketConsumer):
             noti.had_read = True
             noti.save()
 
-    async def connect(self):
-        self.room_group_name = ''
-        # check auth token
-        try:
-            user = await sync_to_async(AuthHelper.find_user)(self.scope)
-            if user is None:
-                print(f"{user=}")
-                return
-            self.room_group_name = f'{user.id}'
-            await self.channel_layer.group_add(
-                self.room_group_name,
-                self.channel_name
-            )
-        except AccessTokenNotIncludedInHeader:
-            print(f"access token was not in header.")
-            return
-        except CustomUser.DoesNotExist:
-            print(f"No such user.")
-            return
+    async def before_accept(self):
+        # No need to implement this behavior
+        pass
 
-        list_of_notification = await self._get_notification_list(user.id)
+    async def after_accept(self):
+        # No need to implement this behavior
+        pass
 
-        await self.accept()
+    async def after_auth(self):
+        self.room_group_name = f'{self.user.id}'
+        list_of_notification = await self._get_notification_list(self.user.id)
+        await self.send_json({
+            'success': True,
+            'msg': 'Success to auth',
+            'user_id': self.user.id,
+            'notifications': list_of_notification
+        })
 
-        await self.send_json(content=list_of_notification)
-
-    async def receive_json(self, content, **kwargs):
-        try:
-            user = await sync_to_async(AuthHelper.find_user)(self.scope)
-        except AccessTokenNotIncludedInHeader:
-            print(f"access token was not in header.")
-            await self.send_json(
-                content={"msg": "access token was not in header."}, close=True
-            )
-            return
-        except CustomUser.DoesNotExist:
-            print(f"No such user.")
-            await self.send_json(content={"msg": "No such user."}, close=True)
-            return
-
+    async def from_client(self, content, **kwargs):
         if content.get('refresh', None) is True:
-            r = await self._get_notification_list(user.id)
+            r = await self._get_notification_list(self.user.id)
             await self.send_json(r)
         elif content.get('channel_hashed_value', None) is not None:
             channel_hashed_value = content.get('channel_hashed_value', None)
-            await self._read_notification(receiver_id=user.id, channel_hashed_value=channel_hashed_value)
+            await self._read_notification(receiver_id=self.user.id, channel_hashed_value=channel_hashed_value)
             await self.send_json({'msg': 'OK'})
 
     async def notifications_broadcast(self, event):
         r = await self._get_notification_list(event.get('user_id', None))
         await self.send_json(r)
-
-    async def disconnect(self, code):
-        self.channel_layer.group_discard(
-            self.room_group_name,
-            self.channel_name
-        )

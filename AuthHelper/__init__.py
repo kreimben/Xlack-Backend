@@ -1,9 +1,11 @@
+import deprecated
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import AccessToken
 
 from custom_user.models import CustomUser
 
 
+@deprecated.deprecated('No reason to use this exception.')
 class AccessTokenNotIncludedInHeader(Exception):
     def __init__(self, *args, **kwargs):
         super(*args, **kwargs)
@@ -11,6 +13,7 @@ class AccessTokenNotIncludedInHeader(Exception):
 
 class AuthHelper:
     @classmethod
+    @deprecated.deprecated('No reason to use this method.')
     def find_user(cls, scope) -> CustomUser | None:
         """
         To find user object in consumer with `scope` directly.
@@ -24,21 +27,20 @@ class AuthHelper:
         return user
 
     @classmethod
-    def find_user_by_access_token(cls, access_token: str) -> (CustomUser | None, int | None):
+    def find_user_by_access_token(cls, access_token: str) -> (CustomUser, int):
         """
         find user by access token.
         access_token: put access token
         return: `CustomUser` object and user pk.
         """
-        try:
-            access_token_obj = AccessToken(access_token)
-        except TokenError:
-            return None, None
+
+        access_token_obj = AccessToken(access_token)
         user_id = access_token_obj['user_id']
         user = CustomUser.objects.get(id=user_id)
         return user, user_id
 
     @classmethod
+    @deprecated.deprecated('There is no way to find access token with header in websocket.')
     def find_access_token(cls, scope) -> str | None:
         access_token = None
         for element in scope["headers"]:
