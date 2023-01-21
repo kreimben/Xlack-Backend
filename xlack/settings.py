@@ -277,10 +277,12 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-DATA_UPLOAD_MAX_MEMORY_SIZE = 1024 * 10  # https://stackoverflow.com/a/54539084/10684515
+# https://stackoverflow.com/a/54539084/10684515
+DATA_UPLOAD_MAX_MEMORY_SIZE = 1024 * 10
 
 CORS_ORIGIN_WHITELIST = (
     'http://localhost:3000',
+    'http://localhost:8000',
     'https://xlack.kreimben.com'
 )
 
