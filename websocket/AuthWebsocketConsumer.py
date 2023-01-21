@@ -14,17 +14,8 @@ class AuthWebsocketConsumer(AsyncJsonWebsocketConsumer, ABC):
     user: CustomUser | None = None  # To save current user information.
 
     async def connect(self):
-        # initial info should be set by abstract method.
         await self.before_accept()
-
-        # await self.channel_layer.group_add(
-        #     self.room_group_name,
-        #     self.channel_name
-        # )
-
-        # Accept First
         await self.accept()
-
         await self.after_accept()
 
         # Check user access token to validate auth.
