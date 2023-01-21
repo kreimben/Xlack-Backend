@@ -18,7 +18,7 @@ from workspace.models import Workspace
 class ChatChannelView(generics.CreateAPIView,
                       generics.ListAPIView,
                       generics.UpdateAPIView):
-    queryset = ChatChannel.objects.all()
+    queryset = ChatChannel.channel_objects.all()
     serializer_class = ChatChannelSerializer
     http_method_names = ['get', 'post', 'patch']
     permission_classes = [permissions.IsAuthenticated]
@@ -89,7 +89,7 @@ class ChatChannelView(generics.CreateAPIView,
 
 class ChatChannelUpdateDeleteView(generics.UpdateAPIView,
                                   generics.DestroyAPIView):
-    queryset = ChatChannel.objects.all()
+    queryset = ChatChannel.channel_objects.all()
     http_method_names = ['patch', 'delete']
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ChatChannelSerializer
@@ -128,7 +128,7 @@ class ChatChannelUpdateDeleteView(generics.UpdateAPIView,
 
 
 class ChatChannelAddMembersView(generics.CreateAPIView):
-    queryset = ChatChannel.objects.all()
+    queryset = ChatChannel.channel_objects.all()
     http_method_names = ['post']
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ChatChannelMembersModifyRequestSerializer
@@ -165,7 +165,7 @@ class ChatChannelAddMembersView(generics.CreateAPIView):
 
 
 class ChatChannelDeleteMembersView(generics.DestroyAPIView):
-    queryset = ChatChannel.objects.all()
+    queryset = ChatChannel.channel_objects.all()
     http_method_names = ['delete']
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ChatChannelMembersModifyRequestSerializer
@@ -200,7 +200,7 @@ class ChatChannelDeleteMembersView(generics.DestroyAPIView):
 
 
 class ChatChannelAddAdminsView(generics.CreateAPIView):
-    queryset = ChatChannel.objects.all()
+    queryset = ChatChannel.channel_objects.all()
     http_method_names = ['post']
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ChatChannelAdminsModifyRequestSerializer
@@ -243,7 +243,7 @@ class ChatChannelAddAdminsView(generics.CreateAPIView):
 
 
 class ChatChannelDeleteAdminsView(generics.DestroyAPIView):
-    queryset = ChatChannel.objects.all()
+    queryset = ChatChannel.channel_objects.all()
     http_method_names = ['delete']
     permission_classes = [permissions.IsAuthenticated]
 

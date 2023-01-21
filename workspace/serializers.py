@@ -9,6 +9,7 @@ class BaseWorkspaceSerializer(serializers.ModelSerializer):
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
     members = CustomUserSerializer(many=True, read_only=True)
+    admins = CustomUserSerializer(many=True, read_only=True)
     chat_channel = ChatChannelSerializer(many=True, read_only=True)
 
     class Meta:

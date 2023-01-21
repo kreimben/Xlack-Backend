@@ -51,13 +51,14 @@ class ChatChannelAdminsModifyRequestSerializer(serializers.ModelSerializer):
 
 class ChatChannelSerializer(serializers.ModelSerializer):
     description = serializers.CharField(read_only=True)
+    is_dm = serializers.BooleanField(read_only=True)
     members = CustomUserSerializer(many=True, read_only=True)
     admins = CustomUserSerializer(many=True, read_only=True)
     hashed_value = serializers.CharField(read_only=True)
 
     class Meta:
         model = ChatChannel
-        fields = ['id', 'name', 'hashed_value', 'description', 'members', 'admins']
+        fields = ['id', 'name', 'hashed_value', 'description', 'members', 'admins', 'is_dm']
 
     def create(self, validated_data):
         hashed_value = ''
