@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     # Apps we made.
     'chat.apps.ChatConfig',
     'chat_channel.apps.ChannelConfig',
+    'chat_reaction.apps.ChatReactionConfig',
     'user_profile.apps.UserProfileConfig',
     'oauth2_token.apps.Oauth2TokenConfig',
     'workspace.apps.WorkspaceConfig',

@@ -52,8 +52,6 @@ class ChatReactionView(
 
             serial = self.get_serializer(reaction)
 
-            print(repr(serial.data['icon']))
-
             return Response(serial.data)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
