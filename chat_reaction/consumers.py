@@ -66,7 +66,8 @@ class ReactionConsumer(AuthWebsocketConsumer):
         await super().after_auth()
 
     async def from_client(self, content, **kwargs):
-        if content.get("create", None) is True:
+        mode = content.get('mode', None)
+        if mode == 'create':
             icon = content.get("icon")
             chat_id = content.get("chat_id")
 
@@ -81,11 +82,9 @@ class ReactionConsumer(AuthWebsocketConsumer):
                     self.room_group_name,
                     {"type": "reaction.broadcast", "reaction": reaction},
                 )
-
-        elif content.get("remove", None) is True:
+        elif mode == 'delete':
             icon = content.get("icon")
             chat_id = content.get("chat_id")
-
             try:
                 reaction = await self.remove_or_delete(chat_id, icon)
             except ValidationError as e:
