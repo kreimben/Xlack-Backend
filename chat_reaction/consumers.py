@@ -70,12 +70,12 @@ class ReactionConsumer(AuthWebsocketConsumer):
         if mode == 'create':
             icon = content.get("icon")
             chat_id = content.get("chat_id")
-
             try:
                 reaction = await self.create_or_add(chat_id, icon)
             except ValidationError as e:
                 await self.send_json({
-                    "error": e.detail
+                    'success': False,
+                    "msg": e.detail
                 })
             else:
                 await self.channel_layer.group_send(
@@ -103,5 +103,8 @@ class ReactionConsumer(AuthWebsocketConsumer):
         This function send reaction to every body in this group.
         """
         await self.send_json(
-            {"reaction": event["reaction"]}
+            {
+                'success': True,
+                "reaction": event["reaction"]
+            }
         )
