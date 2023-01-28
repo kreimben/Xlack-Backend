@@ -46,3 +46,17 @@ class ChatReactionSerializer(serializers.ModelSerializer):
             )
         ]
         fields = ['chat_id', 'id', 'icon', 'count', 'reactors']
+
+class ChatReactionListSerializer(serializers.ModelSerializer):
+    icon = IconField(source='*')
+    count = serializers.IntegerField(source='reactors.count', read_only=True)
+
+    class Meta:
+        model = ChatReaction
+        validators = [
+            UniqueTogetherValidator(
+                queryset=ChatReaction.objects.all(),
+                fields=['chat', 'icon']
+            )
+        ]
+        fields = ['id', 'icon', 'count', 'reactors']
