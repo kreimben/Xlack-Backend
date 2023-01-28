@@ -7,9 +7,10 @@ from rest_framework.response import Response
 
 from chat.models import Chat, ChatBookmark
 from chat.serializers import ChatSerializer, ChatBookmarkSerializer
-
-from chat_reaction.models import ChatReaction 
+from chat_reaction.models import ChatReaction
 from chat_reaction.serializers import ChatReactionListSerializer
+from custom_user.models import CustomUser
+
 
 class ChatView(generics.ListAPIView):
     """
@@ -22,8 +23,24 @@ class ChatView(generics.ListAPIView):
 
     def get_queryset(self):
         chv = self.kwargs.get('channel__hashed_value', None)
-        return self.queryset.filter(channel__hashed_value__exact=chv) \
-            .select_related('file', 'chatter', 'channel').order_by("id")
+        return self.queryset \
+            .select_related('file', 'chatter', 'channel') \
+            .filter(channel__hashed_value__exact=chv) \
+            .prefetch_related(
+            Prefetch(
+                'bookmarks',
+                queryset=ChatBookmark.objects.filter(chat__channel__hashed_value__exact=chv)
+            ),
+            Prefetch(
+                'reaction',
+                queryset=(ChatReaction.objects.filter(chat__channel__hashed_value__exact=chv)
+                          .select_related('chat')
+                          .prefetch_related(Prefetch('reactors',
+                                                     queryset=CustomUser.objects.all())
+                                            )
+                          )
+            )
+        )
 
     def get(self, request: Request, *args, **kwargs):
         """
@@ -31,45 +48,32 @@ class ChatView(generics.ListAPIView):
         넣었다면 아래 문서와 같이 results에 배열로 값이 들어갑니다.
         `has_bookmarked` field는 오직 "내가 북마크 했는지"만 표시됨으로, true 혹은 false값이 나옵니다.
         """
-        chv = self.kwargs.get('channel__hashed_value', None)
         q = self.get_queryset()
-        q.prefetch_related(
-                Prefetch('bookmarks', queryset=ChatBookmark.objects.filter(
-                chat__channel__hashed_value__exact=chv).order_by("chat_id")),
-                Prefetch('reaction', queryset=ChatReaction.objects.filter(
-                chat__channel__hashed_value__exact=chv).order_by("chat_id"))
-                )
-        q = list(q) # For evaluating of queryset. If not to do this now, Redundant query will be executed.
-
+        q = list(q)  # For evaluating of queryset. If not to do this now, Redundant query will be executed.
         s = self.get_serializer(q, many=True)
 
-        bookmark_ids= ChatBookmark.objects.filter(chat__channel__hashed_value__exact=chv,
-                        issuer=self.request.user).order_by("chat_id").values_list("chat_id",flat=True)
-        reactions = ChatReaction.objects.filter(
-                chat__channel__hashed_value__exact=chv).order_by("chat_id")
-        reactions_ids = reactions.values_list("chat_id",flat=True).distinct()
-
         data = s.data[:]
-        for d in data:
-            id=d['id']
-            for bookmark_id in bookmark_ids:
-                if bookmark_id == id:
+        for i, chat in enumerate(q):
+            d = data[i]
+
+            for bookmark in chat.bookmarks.all():  # bookmarks:
+                if bookmark.chat_id == d['id']:
                     d['has_bookmarked'] = True
                     break
             else:
                 d['has_bookmarked'] = False
 
-            for reaction_id in reactions_ids:
-                if reaction_id == id:
-                    react = ChatReactionListSerializer(reactions.filter(chat_id=reaction_id),many=True)
-                    d['reaction'] = react.data
-                    break
-
+            reactions = []
+            for reaction in chat.reaction.all():
+                if reaction.chat_id == d['id']:
+                    reactions.append(reaction)
+            d['reaction'] = ChatReactionListSerializer(reactions, many=True).data
 
         if self.paginate_queryset(q):
             return self.get_paginated_response(data)
         else:
             return Response(data)
+
 
 class ChatBookmarkCreateView(generics.CreateAPIView):
     queryset = ChatBookmark.objects.all()
