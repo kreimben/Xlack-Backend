@@ -1,3 +1,5 @@
+import json
+
 from channels.db import database_sync_to_async
 from rest_framework.serializers import ValidationError
 
@@ -12,7 +14,6 @@ class ReactionConsumer(AuthWebsocketConsumer):
 
     @database_sync_to_async
     def create_or_add(self, chat_id, icon):
-
         icon = icon.encode("unicode_escape").decode("ascii")
 
         reaction, is_created = ChatReaction.objects.get_or_create(
@@ -20,11 +21,9 @@ class ReactionConsumer(AuthWebsocketConsumer):
         )
 
         if self.user not in reaction.reactors.all():
-
             reaction.reactors.add(self.user)
             serial = ChatReactionSerializer(reaction)
             return serial.data
-
         else:
             raise ValidationError(f"{self.user} was found in reactors (Duplication)")
 
@@ -69,43 +68,55 @@ class ReactionConsumer(AuthWebsocketConsumer):
         await super().after_auth()
 
     async def from_client(self, content, **kwargs):
-
-        if content.get("create", None) is True:
+        mode = content.get('mode', None)
+        if mode == 'create':
             icon = content.get("icon")
             chat_id = content.get("chat_id")
-
             try:
                 reaction = await self.create_or_add(chat_id, icon)
             except ValidationError as e:
                 await self.send_json({
-                    "error": e.detail
+                    'success': False,
+                    "msg": e.detail
                 })
             else:
                 await self.channel_layer.group_send(
                     self.room_group_name,
                     {"type": "reaction.broadcast", "reaction": reaction},
                 )
-
-        elif content.get("remove", None) is True:
+        elif mode == 'delete':
             icon = content.get("icon")
             chat_id = content.get("chat_id")
-
             try:
                 reaction = await self.remove_or_delete(chat_id, icon)
             except ValidationError as e:
                 await self.send_json({
-                    "error": e.detail
+                    'success': False,
+                    "msg": e.detail
                 })
             else:
                 await self.channel_layer.group_send(
                     self.room_group_name,
                     {"type": "reaction.broadcast", "reaction": reaction},
                 )
+        else:
+            await self.send_json({
+                'success': False,
+                'msg': 'Mode should be \"create\" or \"delete\". Please refer to \"form\" below',
+                'form': json.dumps({
+                    'mode': 'create or delete',
+                    'icon': 'some icon as raw',
+                    'chat_id': 'chat id'
+                })
+            })
 
     async def reaction_broadcast(self, event):
         """
         This function send reaction to every body in this group.
         """
         await self.send_json(
-            {"reaction": event["reaction"]}
+            {
+                'success': True,
+                "reaction": event["reaction"]
+            }
         )
