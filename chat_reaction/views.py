@@ -28,16 +28,14 @@ class ChatReactionView(
             type=TYPE_OBJECT,
             properties={
                 "chat_id": Schema(type=TYPE_NUMBER, description="id of chat"),
-                "icon": Schema(
-                    type=TYPE_STRING, description="icon of reaction"
-                ),
+                "icon": Schema(type=TYPE_STRING, description="icon of reaction"),
             },
         )
     )
     def post(self, request: Request, *args, **kwargs):
-        """ Endpoint for creating new reaction or
-            adding user to existing reaction
-            (Debug use only)
+        """Endpoint for creating new reaction or
+        adding user to existing reaction
+        (Debug use only)
         """
 
         chat_id = request.data.get("chat_id", None)
@@ -45,7 +43,8 @@ class ChatReactionView(
         icon = icon.encode("unicode_escape").decode("ascii")
 
         reaction, is_created = ChatReaction.objects.get_or_create(
-            chat_id=chat_id, icon=icon)
+            chat_id=chat_id, icon=icon
+        )
 
         if request.user not in reaction.reactors.all():
             reaction.reactors.add(request.user)
@@ -58,17 +57,16 @@ class ChatReactionView(
 
     @swagger_auto_schema(
         request_body=Schema(
-            type=TYPE_OBJECT, properties={
+            type=TYPE_OBJECT,
+            properties={
                 "chat_id": Schema(type=TYPE_NUMBER, description="id of chat"),
-                "icon": Schema(
-                    type=TYPE_STRING, description="icon of reaction"
-                ),
+                "icon": Schema(type=TYPE_STRING, description="icon of reaction"),
             },
         )
     )
     def patch(self, request: Request, *args, **kwargs):
-        """ Endpoint for removing user to existing reaction
-            (Debug use only)
+        """Endpoint for removing user to existing reaction
+        (Debug use only)
         """
 
         chat_id = request.data.get("chat_id", None)
