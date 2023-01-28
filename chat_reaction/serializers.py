@@ -51,7 +51,6 @@ class ChatReactionSerializer(serializers.ModelSerializer):
 
 class ChatReactionListSerializer(serializers.ModelSerializer):
     icon = IconField(source='*')
-    count = serializers.IntegerField(source='reactors.count', read_only=True)
 
     class Meta:
         model = ChatReaction
@@ -61,4 +60,4 @@ class ChatReactionListSerializer(serializers.ModelSerializer):
                 fields=['chat', 'icon']
             )
         ]
-        fields = ['id', 'icon', 'count', 'reactors']
+        fields = ['id', 'icon', 'reactors']
