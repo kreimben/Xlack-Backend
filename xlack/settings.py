@@ -13,6 +13,7 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+from django.conf import settings
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -292,4 +293,5 @@ CORS_ORIGIN_WHITELIST = (
 
 CORS_ALLOW_CREDENTIALS = True
 
-SILKY_PYTHON_PROFILER = True
+if settings.DEBUG:
+    SILKY_PYTHON_PROFILER = True
