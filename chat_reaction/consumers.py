@@ -12,7 +12,6 @@ class ReactionConsumer(AuthWebsocketConsumer):
 
     @database_sync_to_async
     def create_or_add(self, chat_id, icon):
-
         icon = icon.encode("unicode_escape").decode("ascii")
 
         reaction, is_created = ChatReaction.objects.get_or_create(
@@ -20,11 +19,9 @@ class ReactionConsumer(AuthWebsocketConsumer):
         )
 
         if self.user not in reaction.reactors.all():
-
             reaction.reactors.add(self.user)
             serial = ChatReactionSerializer(reaction)
             return serial.data
-
         else:
             raise ValidationError(f"{self.user} was found in reactors (Duplication)")
 
@@ -69,7 +66,6 @@ class ReactionConsumer(AuthWebsocketConsumer):
         await super().after_auth()
 
     async def from_client(self, content, **kwargs):
-
         if content.get("create", None) is True:
             icon = content.get("icon")
             chat_id = content.get("chat_id")
@@ -94,7 +90,8 @@ class ReactionConsumer(AuthWebsocketConsumer):
                 reaction = await self.remove_or_delete(chat_id, icon)
             except ValidationError as e:
                 await self.send_json({
-                    "error": e.detail
+                    'success': False,
+                    "msg": e.detail
                 })
             else:
                 await self.channel_layer.group_send(
