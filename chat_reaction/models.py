@@ -21,4 +21,4 @@ class ChatReaction(models.Model):
         ]
 
     def __str__(self):
-        return f'({self.id}-{self.icon})-({self.chat}-{self.reactors.all()}) '
+        return f'{self.icon} ({self.chat.id}) '
