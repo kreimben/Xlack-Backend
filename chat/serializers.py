@@ -6,6 +6,7 @@ from custom_user.serializers import CustomUserSerializer
 
 class ChatSerializer(serializers.Serializer):
     id = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
+    message = serializers.CharField(read_only=True)
     channel = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
     has_bookmarked = serializers.BooleanField(read_only=True)
     chatter = CustomUserSerializer(many=False, read_only=True)
