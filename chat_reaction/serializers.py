@@ -38,4 +38,4 @@ class ChatReactionSerializer(serializers.ModelSerializer):
                 fields=['chat', 'icon']
             )
         ]
-        fields = ['chat', 'id', 'icon', 'count', 'reactors']
+        fields = ['chat_id', 'id', 'icon', 'count', 'reactors']
