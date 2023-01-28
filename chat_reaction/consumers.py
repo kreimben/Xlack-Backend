@@ -1,14 +1,10 @@
 from channels.db import database_sync_to_async
-
-from chat_channel.models import ChatChannel
-
-from chat_reaction.models import ChatReaction
-from chat_reaction.serializers import ChatReactionSerializer
-
-from websocket.AuthWebsocketConsumer import AuthWebsocketConsumer
-
 from rest_framework.serializers import ValidationError
 
+from chat_channel.models import ChatChannel
+from chat_reaction.models import ChatReaction
+from chat_reaction.serializers import ChatReactionSerializer
+from websocket.AuthWebsocketConsumer import AuthWebsocketConsumer
 
 
 class ReactionConsumer(AuthWebsocketConsumer):
@@ -51,7 +47,6 @@ class ReactionConsumer(AuthWebsocketConsumer):
                 reaction.delete()
             return serial.data
 
-
     async def before_accept(self):
         kwargs = self.scope["url_route"]["kwargs"]
         self.room_group_name = kwargs["chat_channel_hashed_value"]
@@ -83,8 +78,8 @@ class ReactionConsumer(AuthWebsocketConsumer):
                 reaction = await self.create_or_add(chat_id, icon)
             except ValidationError as e:
                 await self.send_json({
-                    "error":e.detail
-                    })
+                    "error": e.detail
+                })
             else:
                 await self.channel_layer.group_send(
                     self.room_group_name,
@@ -99,8 +94,8 @@ class ReactionConsumer(AuthWebsocketConsumer):
                 reaction = await self.remove_or_delete(chat_id, icon)
             except ValidationError as e:
                 await self.send_json({
-                    "error":e.detail
-                    })
+                    "error": e.detail
+                })
             else:
                 await self.channel_layer.group_send(
                     self.room_group_name,
