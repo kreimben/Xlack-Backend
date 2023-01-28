@@ -15,7 +15,8 @@ schema_view = get_schema_view(
         contact=openapi.Contact(email="aksidion@kreimben.com"),
         license=openapi.License(name="MIT"),
     ),
-    url='https://api.xlack.kreimben.com/docs/' if not os.getenv('DJANGO_DEBUG') else 'http://127.0.0.1:8000/docs/',
+    url='https://api.xlack.kreimben.com/docs/' if not os.getenv(
+        'DJANGO_DEBUG') else 'http://127.0.0.1:8000',
     public=False,
     permission_classes=[permissions.IsAuthenticated],
 )
@@ -25,7 +26,8 @@ urlpatterns = [
     # For OAuth2 Login and Registrations.
     path("accounts/", include("dj_rest_auth.urls")),
     path("token/", include("oauth2_token.urls")),
-    path("socialaccounts/", SocialAccountListView.as_view(), name="socialaccount_connections"),
+    path("socialaccounts/", SocialAccountListView.as_view(),
+         name="socialaccount_connections"),
     # Swagger Documentation.
     path(
         "docs/",

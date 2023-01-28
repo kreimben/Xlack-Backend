@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     # Apps we made.
     'chat.apps.ChatConfig',
     'chat_channel.apps.ChannelConfig',
+    'chat_reaction.apps.ChatReactionConfig',
     'user_profile.apps.UserProfileConfig',
     'oauth2_token.apps.Oauth2TokenConfig',
     'workspace.apps.WorkspaceConfig',
@@ -280,10 +281,12 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-DATA_UPLOAD_MAX_MEMORY_SIZE = 1024 * 10  # https://stackoverflow.com/a/54539084/10684515
+# https://stackoverflow.com/a/54539084/10684515
+DATA_UPLOAD_MAX_MEMORY_SIZE = 1024 * 10
 
 CORS_ORIGIN_WHITELIST = (
     'http://localhost:3000',
+    'http://localhost:8000',
     'https://xlack.kreimben.com'
 )
 

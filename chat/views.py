@@ -48,7 +48,6 @@ class ChatView(generics.ListAPIView):
         else:
             return Response(data)
 
-
 class ChatBookmarkCreateView(generics.CreateAPIView):
     queryset = ChatBookmark.objects.all()
     serializer_class = ChatBookmarkSerializer
@@ -57,7 +56,8 @@ class ChatBookmarkCreateView(generics.CreateAPIView):
         s = self.get_serializer(data=request.data)
         if s.is_valid():
             chat_id = s.data.get('chat_id')
-            chat_bookmark, is_created = ChatBookmark.objects.get_or_create(issuer=request.user, chat_id=chat_id)
+            chat_bookmark, is_created = ChatBookmark.objects.get_or_create(
+                issuer=request.user, chat_id=chat_id)
             s = self.get_serializer(chat_bookmark)
             return Response(s.data)
         else:
@@ -70,6 +70,7 @@ class ChatBookmarkDeleteView(generics.DestroyAPIView):
 
     def delete(self, request: Request, *args, **kwargs):
         chat_id = kwargs.get('chat_id', None)
-        chat_bookmark = get_object_or_404(ChatBookmark, issuer=request.user, chat_id=chat_id)
+        chat_bookmark = get_object_or_404(
+            ChatBookmark, issuer=request.user, chat_id=chat_id)
         chat_bookmark.delete()
         return Response(status=status.HTTP_302_FOUND)
