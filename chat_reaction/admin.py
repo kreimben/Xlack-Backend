@@ -8,7 +8,7 @@ from chat_reaction.serializers import Util
 class ChatReactionAdmin(admin.ModelAdmin):
     list_display = ['id', 'chat', 'get_icon', 'get_reactors']
 
-    def icon_repr(self, obj):
+    def get_icon(self, obj):
         return Util.to_repr(obj.icon)
 
     def get_reactors(self, obj: ChatReaction):
