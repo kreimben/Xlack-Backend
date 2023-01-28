@@ -34,6 +34,7 @@ urlpatterns = [
         schema_view.with_ui("swagger", cache_timeout=0),
         name="swagger_documentation",
     ),
+
     path("channel/", include("chat_channel.urls")),
     path('dm/', include('direct_message.urls')),
     path("workspace/", include("workspace.urls")),
@@ -43,3 +44,6 @@ urlpatterns = [
     path("file/", include("file.urls")),
     path("notifications/", include("notifications.urls")),
 ]
+
+if os.getenv('DJANGO_DEBUG'):
+    urlpatterns += [path('about/silk/', include('silk.urls', namespace='silk'))]
