@@ -6,21 +6,32 @@ from rest_framework.validators import UniqueTogetherValidator
 
 from chat_reaction.models import ChatReaction
 
+class Util:
+    def to_repr(icon:str):
+        rep = icon.encode("ascii").decode("unicode_escape")
+
+        return rep
+
+    def to_inter(icon:str):
+
+        if not isinstance(icon, str):
+            msg = 'Incorrect type, expected strng, but got %s'
+            raise ValidationError(msg % type(icon))
+
+        code = icon.encode("unicode_escape").decode("ascii")
+
+        return code
 
 class IconField(serializers.Field):
 
     def to_representation(self, value):
-        rep = value.icon.encode("ascii").decode("unicode_escape")
+        rep = Util.to_repr(value.icon)
 
         return rep
 
     def to_internal_value(self, data):
 
-        if not isinstance(data.icon, str):
-            msg = 'Incorrect type, expected strng, but got %s'
-            raise ValidationError(msg % type(data.icon))
-
-        code = data.icon.encode("unicode_escape").decode("ascii")
+        code = Util.to_inter(data.icon)
 
         return code
 
