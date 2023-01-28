@@ -1,3 +1,5 @@
+import json
+
 from channels.db import database_sync_to_async
 from rest_framework.serializers import ValidationError
 
@@ -97,6 +99,16 @@ class ReactionConsumer(AuthWebsocketConsumer):
                     self.room_group_name,
                     {"type": "reaction.broadcast", "reaction": reaction},
                 )
+        else:
+            await self.send_json({
+                'success': False,
+                'msg': 'Mode should be \"create\" or \"delete\". Please refer to \"form\" below',
+                'form': json.dumps({
+                    'mode': 'create or delete',
+                    'icon': 'some icon as raw',
+                    'chat_id': 'chat id'
+                })
+            })
 
     async def reaction_broadcast(self, event):
         """
