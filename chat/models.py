@@ -16,6 +16,7 @@ class Chat(models.Model):
     class Meta:
         verbose_name = 'Chat'
         verbose_name_plural = 'Chats'
+        ordering = ['-id']
 
     def __str__(self):
         return f'{self.channel} 채널의 {self.message}'

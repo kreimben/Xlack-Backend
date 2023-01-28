@@ -1,3 +1,4 @@
+from django.db.models import Prefetch
 from rest_framework import generics, status
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
@@ -19,7 +20,8 @@ class ChatView(generics.ListAPIView):
 
     def get_queryset(self):
         chv = self.kwargs.get('channel__hashed_value', None)
-        return self.queryset.filter(channel__hashed_value__exact=chv).order_by('-id')
+        return self.queryset.filter(channel__hashed_value__exact=chv) \
+            .select_related('file', 'chatter', 'channel')
 
     def get(self, request: Request, *args, **kwargs):
         """
@@ -28,19 +30,23 @@ class ChatView(generics.ListAPIView):
         `has_bookmarked` field는 오직 "내가 북마크 했는지"만 표시됨으로, true 혹은 false값이 나옵니다.
         """
         q = self.get_queryset()
-        page = self.paginate_queryset(q)
-        if page is not None:
-            s = self.get_serializer(page, many=True)
-            return self.get_paginated_response(s.data)
+        q.prefetch_related(Prefetch('bookmarks', queryset=ChatBookmark.objects.all()))
+        q = list(q) # For evaluating of queryset. If not to do this now, Redundant query will be executed.
+        s = self.get_serializer(q, many=True)
+        bookmarks: [ChatBookmark] = list(ChatBookmark.objects.filter(issuer=self.request.user))
+        data = s.data[:]
+        for d in data:
+            for bookmark in bookmarks:
+                if bookmark.chat_id == d['id']:
+                    d['has_bookmarked'] = True
+                    break
+            else:
+                d['has_bookmarked'] = False
+
+        if self.paginate_queryset(q):
+            return self.get_paginated_response(data)
         else:
-            s = self.get_serializer(q, many=True)
-            for data in s.data[:]:
-                try:
-                    b = ChatBookmark.objects.get(issuer=self.request.user, chat_id=data['id'])
-                except ChatBookmark.DoesNotExist:
-                    b = None
-                data['has_bookmarked'] = True if b is not None else False
-            return Response(s.data)
+            return Response(data)
 
 
 class ChatBookmarkCreateView(generics.CreateAPIView):
