@@ -1,7 +1,5 @@
 from rest_framework import serializers
-
 from rest_framework.serializers import ValidationError
-
 from rest_framework.validators import UniqueTogetherValidator
 
 from chat_reaction.models import ChatReaction
@@ -15,7 +13,6 @@ class IconField(serializers.Field):
         return rep
 
     def to_internal_value(self, data):
-
         if not isinstance(data.icon, str):
             msg = 'Incorrect type, expected strng, but got %s'
             raise ValidationError(msg % type(data.icon))
@@ -26,7 +23,6 @@ class IconField(serializers.Field):
 
 
 class ChatReactionSerializer(serializers.ModelSerializer):
-
     icon = IconField(source='*')
     count = serializers.IntegerField(source='reactors.count', read_only=True)
 
