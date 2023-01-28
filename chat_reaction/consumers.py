@@ -10,6 +10,7 @@ from websocket.AuthWebsocketConsumer import AuthWebsocketConsumer
 from rest_framework.serializers import ValidationError
 
 
+
 class ReactionConsumer(AuthWebsocketConsumer):
     chat_channel: ChatChannel | None = None
 
@@ -23,11 +24,11 @@ class ReactionConsumer(AuthWebsocketConsumer):
         )
 
         if self.user not in reaction.reactors.all():
+
             reaction.reactors.add(self.user)
-
             serial = ChatReactionSerializer(reaction)
-
             return serial.data
+
         else:
             raise ValidationError(f"{self.user} was found in reactors (Duplication)")
 
@@ -39,25 +40,17 @@ class ReactionConsumer(AuthWebsocketConsumer):
         try:
             reaction = ChatReaction.objects.get(chat_id=chat_id, icon=icon)
         except ChatReaction.DoesNotExist:
-            raise ChatReaction.DoesNotExist("There is no reaction like that")
+            raise ValidationError("There is no reaction like that")
 
         if self.user not in reaction.reactors.all():
             raise ValidationError(f"{self.user} was not found in reactors (Not Found)")
         else:
             reaction.reactors.remove(self.user)
+            serial = ChatReactionSerializer(reaction)
             if reaction.reactors.count() == 0:
-                serial = ChatReactionSerializer(reaction)
-                tmp_icon = serial.icon
                 reaction.delete()
-                dic = dict(chat_id=chat_id, icon=tmp_icon, count=0, reactors=None)
-                return dic
-            else:
-                reaction.save()
-                serial = ChatReactionSerializer(reaction)
-        return serial.data
+            return serial.data
 
-    async def after_auth(self):
-        await super().after_auth()
 
     async def before_accept(self):
         kwargs = self.scope["url_route"]["kwargs"]
@@ -77,34 +70,47 @@ class ReactionConsumer(AuthWebsocketConsumer):
                 close=True,
             )
 
+    async def after_auth(self):
+        await super().after_auth()
+
     async def from_client(self, content, **kwargs):
 
         if content.get("create", None) is True:
             icon = content.get("icon")
             chat_id = content.get("chat_id")
 
-            reaction = await self.create_or_add(chat_id, icon)
-
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {"type": "reaction.broadcast", "reaction": reaction},
-            )
+            try:
+                reaction = await self.create_or_add(chat_id, icon)
+            except ValidationError as e:
+                await self.send_json({
+                    "error":e.detail
+                    })
+            else:
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {"type": "reaction.broadcast", "reaction": reaction},
+                )
 
         elif content.get("remove", None) is True:
             icon = content.get("icon")
             chat_id = content.get("chat_id")
 
-            reaction = await self.remove_or_delete(chat_id, icon)
-
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {"type": "reaction.broadcast", "reaction": reaction},
-            )
+            try:
+                reaction = await self.remove_or_delete(chat_id, icon)
+            except ValidationError as e:
+                await self.send_json({
+                    "error":e.detail
+                    })
+            else:
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {"type": "reaction.broadcast", "reaction": reaction},
+                )
 
     async def reaction_broadcast(self, event):
         """
         This function send reaction to every body in this group.
         """
         await self.send_json(
-            {"creation": event["creation"], "reaction": event["reaction"]}
+            {"reaction": event["reaction"]}
         )
