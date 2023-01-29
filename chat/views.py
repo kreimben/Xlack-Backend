@@ -65,12 +65,6 @@ class ChatView(generics.ListAPIView):
             else:
                 d['has_bookmarked'] = False
 
-            reactions = []
-            for reaction in chat.reaction.all():
-                if reaction.chat_id == d['id']:
-                    reactions.append(reaction)
-            d['reaction'] = ChatReactionListSerializer(reactions, many=True).data
-
         if page is not None:
             return self.get_paginated_response(data)
         else:
