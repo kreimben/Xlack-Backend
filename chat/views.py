@@ -50,6 +50,8 @@ class ChatView(generics.ListAPIView):
         """
         q = self.get_queryset()
         q = list(q)  # For evaluating of queryset. If not to do this now, Redundant query will be executed.
+        if page := self.paginate_queryset(q):
+            q = page
         s = self.get_serializer(q, many=True)
 
         data = s.data[:]
@@ -69,7 +71,7 @@ class ChatView(generics.ListAPIView):
                     reactions.append(reaction)
             d['reaction'] = ChatReactionListSerializer(reactions, many=True).data
 
-        if self.paginate_queryset(q):
+        if page is not None:
             return self.get_paginated_response(data)
         else:
             return Response(data)
