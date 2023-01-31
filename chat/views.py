@@ -7,6 +7,9 @@ from rest_framework.response import Response
 
 from chat.models import Chat, ChatBookmark
 from chat.serializers import ChatSerializer, ChatBookmarkSerializer
+from chat_reaction.models import ChatReaction
+from chat_reaction.serializers import ChatReactionListSerializer
+from custom_user.models import CustomUser
 
 
 class ChatView(generics.ListAPIView):
@@ -20,8 +23,24 @@ class ChatView(generics.ListAPIView):
 
     def get_queryset(self):
         chv = self.kwargs.get('channel__hashed_value', None)
-        return self.queryset.filter(channel__hashed_value__exact=chv) \
-            .select_related('file', 'chatter', 'channel')
+        return self.queryset \
+            .select_related('file', 'chatter', 'channel') \
+            .filter(channel__hashed_value__exact=chv) \
+            .prefetch_related(
+            Prefetch(
+                'bookmarks',
+                queryset=ChatBookmark.objects.filter(chat__channel__hashed_value__exact=chv)
+            ),
+            Prefetch(
+                'reaction',
+                queryset=(ChatReaction.objects.filter(chat__channel__hashed_value__exact=chv)
+                          .select_related('chat')
+                          .prefetch_related(Prefetch('reactors',
+                                                     queryset=CustomUser.objects.all())
+                                            )
+                          )
+            )
+        )
 
     def get(self, request: Request, *args, **kwargs):
         """
@@ -30,23 +49,27 @@ class ChatView(generics.ListAPIView):
         `has_bookmarked` field는 오직 "내가 북마크 했는지"만 표시됨으로, true 혹은 false값이 나옵니다.
         """
         q = self.get_queryset()
-        q.prefetch_related(Prefetch('bookmarks', queryset=ChatBookmark.objects.all()))
-        q = list(q) # For evaluating of queryset. If not to do this now, Redundant query will be executed.
+        q = list(q)  # For evaluating of queryset. If not to do this now, Redundant query will be executed.
+        if page := self.paginate_queryset(q):
+            q = page
         s = self.get_serializer(q, many=True)
-        bookmarks: [ChatBookmark] = list(ChatBookmark.objects.filter(issuer=self.request.user))
+
         data = s.data[:]
-        for d in data:
-            for bookmark in bookmarks:
+        for i, chat in enumerate(q):
+            d = data[i]
+
+            for bookmark in chat.bookmarks.all():  # bookmarks:
                 if bookmark.chat_id == d['id']:
                     d['has_bookmarked'] = True
                     break
             else:
                 d['has_bookmarked'] = False
 
-        if self.paginate_queryset(q):
+        if page is not None:
             return self.get_paginated_response(data)
         else:
             return Response(data)
+
 
 class ChatBookmarkCreateView(generics.CreateAPIView):
     queryset = ChatBookmark.objects.all()

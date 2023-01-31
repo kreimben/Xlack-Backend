@@ -1,11 +1,11 @@
 from django.db import models
+
 from chat.models import Chat
 from xlack import settings
 
 
 class ChatReaction(models.Model):
-    chat = models.ForeignKey(
-        Chat, on_delete=models.CASCADE, related_name='reaction')
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='reaction')
     reactors = models.ManyToManyField(
         settings.AUTH_USER_MODEL, related_name='reaction_reactors',
         blank=True
@@ -21,4 +21,4 @@ class ChatReaction(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.icon} ({self.chat.id}) '
+        return f'{self.icon} (chat_id: {self.chat.id})'

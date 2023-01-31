@@ -1,6 +1,7 @@
 import os
 
 from dj_rest_auth.registration.views import SocialAccountListView
+from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
 from drf_yasg import openapi
@@ -45,5 +46,7 @@ urlpatterns = [
     path("notifications/", include("notifications.urls")),
 ]
 
-if os.getenv('DJANGO_DEBUG'):
-    urlpatterns += [path('about/silk/', include('silk.urls', namespace='silk'))]
+if settings.DEBUG:
+    urlpatterns += [
+        path('about/silk/', include('silk.urls', namespace='silk')),
+    ]

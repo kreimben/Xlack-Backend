@@ -4,14 +4,14 @@ from rest_framework.validators import UniqueTogetherValidator
 
 from chat_reaction.models import ChatReaction
 
+
 class Util:
-    def to_repr(icon:str):
+    def to_repr(icon: str):
         rep = icon.encode("ascii").decode("unicode_escape")
 
         return rep
 
-    def to_inter(icon:str):
-
+    def to_inter(icon: str):
         if not isinstance(icon, str):
             msg = 'Incorrect type, expected strng, but got %s'
             raise ValidationError(msg % type(icon))
@@ -19,6 +19,7 @@ class Util:
         code = icon.encode("unicode_escape").decode("ascii")
 
         return code
+
 
 class IconField(serializers.Field):
 
@@ -46,3 +47,17 @@ class ChatReactionSerializer(serializers.ModelSerializer):
             )
         ]
         fields = ['chat_id', 'id', 'icon', 'count', 'reactors']
+
+
+class ChatReactionListSerializer(serializers.ModelSerializer):
+    icon = IconField(source='*')
+
+    class Meta:
+        model = ChatReaction
+        validators = [
+            UniqueTogetherValidator(
+                queryset=ChatReaction.objects.all(),
+                fields=['chat', 'icon']
+            )
+        ]
+        fields = ['id', 'icon', 'reactors']
