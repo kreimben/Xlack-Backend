@@ -1,5 +1,7 @@
 from django.db import models
+
 from xlack import settings
+
 
 class Workspace(models.Model):
     name = models.CharField(max_length=100, unique=True)

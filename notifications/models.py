@@ -1,11 +1,9 @@
-# notifications/models.py
 from django.db import models
-from notifications.manager import NotificationManger
 
-from xlack import settings
-
-from chat_channel.models import ChatChannel
 from chat.models import Chat
+from chat_channel.models import ChatChannel
+from notifications.manager import NotificationManger
+from xlack import settings
 
 
 class Notification(models.Model):
@@ -13,9 +11,6 @@ class Notification(models.Model):
     Notification model
     Many Notification per one chat
     """
-
-    # id will be created automatically
-
     receiver = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -38,7 +33,7 @@ class Notification(models.Model):
         Chat,
         on_delete=models.CASCADE,
         related_name="notification_chat",
-        default=None,  # Have to allow blank,if want to test without chat
+        default=None,  # Have to allow blank, if want to test without chat
         null=True,
         blank=True,
     )
