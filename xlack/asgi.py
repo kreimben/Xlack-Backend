@@ -23,6 +23,7 @@ import chat.routing
 import chat_reaction.routing
 import status.routing
 import notifications.routing
+import call.routing
 
 application = ProtocolTypeRouter(
     {
@@ -33,6 +34,7 @@ application = ProtocolTypeRouter(
                 + status.routing.websocket_urlpatterns
                 + notifications.routing.websocket_urlpatterns
                 + chat_reaction.routing.websocket_urlpatterns
+                + call.routing.websocket_urlpatterns
             )
         ),
     }
