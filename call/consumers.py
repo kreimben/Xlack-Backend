@@ -153,7 +153,7 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
 
         if kind == 'new':
             msg = f" User id:{peer} want to promote to group call"
-            self.group_channel = Hasher.hash(peer)
+            self.group_channel = f"call_group_{Hasher.hash(peer)}"
             self.channel_layer.group_add(self.group_channel,self.channel_name)
             group = self.group_channel
             await self.send_json({
@@ -181,8 +181,18 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
             msg = f" User id:{peer} rejected to invitation"
         elif kind == 'quit':
             msg = f" User id:{peer} quit to group call"
+            await self.channel_layer.group_send(
+                scope,
+                {
+                    "type":"send.group.event",
+                    "request":request,
+                    "peer":peer,
+                    "msg":msg,
+                    "group":group,
+                })
             self.channel_layer.group_discard(self.group_channel,self.channel_name)
             self.group_channel = None
+            return
         else:
             await self.send_json({
                 "error": f"invalid request : {kind}, failed to {kind}"

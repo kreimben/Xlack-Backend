@@ -13,9 +13,11 @@ let call = document.getElementById("call")
 let callBtn = document.getElementById("call-btn")
 let callId = document.getElementById("call-id")
 
+let user_id = null
 let token
 let ws
 let isAuthorized = false
+let group = null
 let peers = {}
 
 
@@ -48,13 +50,14 @@ tokenBtn.addEventListener('click',()=>{
 function wsAuthHandler(event){
   let data = JSON.parse(event.data);
   console.log("ws:authrequest:",data)
-
+  if (data['success'] == true) {
+    isAuthorized = true
+    user_id= data['user_id']
+  }
   let t = {
     authorization : token
   }
   ws.send(JSON.stringify(t)) 
-  isAuthorized = true
-
 }
 
 function wsMessageHandler(event){
@@ -62,13 +65,62 @@ function wsMessageHandler(event){
   console.log("ws:message received:",data)
 
   let type = data['type']
+  let req = data['request']
+  let peer = data['peer']
 
-  if (type=='offer') { // receive a call
-    let offer = data['sdp']
-    createAnswer(offer,data['peer'])
+  if (peer == user_id) {
+    //ignore self generated msg
     return
   }
-  else if (type=='answer') { // callee has answered
+
+  if (req=="call.new") {
+    // accept or reject call
+    accept = confirm("Accept call from id:",peer," ?") 
+    let answer = {
+      request,
+      target : peer
+    }
+    if (accept) {
+      answer.request = 'call.accept'
+    } else {
+      answer.request = 'call.reject'
+    }
+    ws.send(answer)
+  } else if (req=="call.accept") {
+    createOffer(peer,group)
+  } else if (req=="call.reject") {
+    alert("Call rejected by id:",peer)
+
+    // manage group
+  } else if (req=="group.new"){
+    alert("Converted to group call :",data['group'])
+    group = data['group']
+    
+  } else if (req=="group.invite"){
+    accept = confirm("Accept group call invite from id:",peer," ?") 
+    let answer = {
+      request,
+      target : peer
+    }
+    if (accept) {
+      answer.request = 'group.accept'
+      group = data['group']
+    } else {
+      answer.request = 'group.reject'
+    }
+    ws.send(answer)
+  } else if (req="group.accept") {
+    createOffer(peer,group)
+  } else if (req="group.reject") {
+    alert("Group call rejected by id:",peer)
+  }
+
+  if (type=='sdp.offer') { // receive a call
+    let offer = data['sdp']
+    createAnswer(offer,data['peer'],group)
+    return
+  }
+  else if (type=='sdp.answer') { // callee has answered
     let answer = data['sdp']
     let peer_id = data['peer']
     let peer = peers[peer_id][0] //array [peerConnection|data channel]
@@ -83,8 +135,6 @@ let localStream = new MediaStream();
 let localVideo = document.getElementById("video-self")
 let btnVideo = document.getElementById("video-btn-video")
 let btnAudio = document.getElementById("video-btn-audio")
-
-
 
 const constraints = {
   'local' : {
@@ -128,17 +178,21 @@ function setLocalStream(){
 }
 setLocalStream()
 
-function sendSignal(type,target,sdp) {
-  let j = JSON.stringify({
+function sendSignal(type,target,sdp,group) {
+  let t = {
     'type':type,
     'target':target,
     'sdp':sdp
-  })
+  }
+  if (group) {
+    t.group = group
+  }
+  j = JSON.stringify(t)
   console.log("sendSignal:",j)
   ws.send(j)
 }
 
-function createOffer(target){
+function createOffer(target,group){
   let peerConnection = new RTCPeerConnection(null);
   addLocalTracks(peerConnection);
 
@@ -172,8 +226,8 @@ function createOffer(target){
       return
     }
 
-    sendSignal('offer',target,
-      peerConnection.localDescription
+    sendSignal('sdp.offer',target,
+      peerConnection.localDescription,group
     )
   })
 
@@ -184,7 +238,7 @@ function createOffer(target){
   })
 }
 
-function createAnswer(offer,target){
+function createAnswer(offer,target,group){
   let peerConnection = new RTCPeerConnection(null);
   addLocalTracks(peerConnection);
 
@@ -220,8 +274,8 @@ function createAnswer(offer,target){
       return
     }
 
-    sendSignal('answer',target,
-      peerConnection.localDescription
+    sendSignal('adp.answer',target,
+      peerConnection.localDescription,group
     )
   })
 
@@ -267,5 +321,5 @@ function setOnTrack(peer,remoteVideo) {
 }
 
 function call_by_id(){
-  createOffer(callId.value)
+
 }
