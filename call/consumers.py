@@ -17,7 +17,9 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
     user_channel= None # one channel for one user
     group_channel= None # group channel for group call
 
+    
     async def connect(self):
+        await self.accept()
         # Check user access token to validate auth.
         await self.send_json({
             'msg': 'Give me user access token. Just input access token value.',
@@ -36,6 +38,7 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
                     self.user, _ = await sync_to_async(AuthHelper.find_user_by_access_token)(
                         content.get('authorization'))
                     self.user_channel= f'call_{self.user.id}'
+                    await self.after_auth()
 
                 except rest_framework_simplejwt.exceptions.TokenError as e:
                     await self.send_json({
@@ -53,7 +56,15 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
                     'user': f'user_id: {self.user.id}'
                 })
         else:
-            await self.from_client(content, **kwargs)
+            if self.user is not None:
+                await self.from_client(content, **kwargs)
+            else:
+                await self.send_json({
+                    'msg': 'Give me user access token. Just input access token value.',
+                    'format': json.dumps({
+                        'authorization': '{access_token}'
+                    })
+                })
 
     async def after_auth(self):
 
@@ -69,6 +80,7 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
         })
 
     async def from_client(self, content, **kwargs):
+        print(self.user.id," has send : ", content)
         info = """
         request format : 
             {
@@ -87,24 +99,26 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
 
         if request is not None:
             request = request.split('.')
-
+            print(request)
             # manage one to one call
             if request[0]=='call':
-                self.call(content,request[1])
+                await self.call(content,request[1])
             # manage group call
             elif request[0]=='group':
-                self.group_call(content,request[1])
+                await self.group_call(content,request[1])
             else:
-                self.send_json({
+                print(info)
+                await self.send_json({
                     "error":"invalid request",
                     "format":info
                     })
         else:
-            self.manage_offer(content) # manage sdp
+            await self.manage_offer(content) # manage sdp
 
 
     # manage one to one call
     async def call(self,content,kind):
+        print("Call>>",content,kind)
         target = content.get('target',None)
         request = content.get('request',None)
         peer = self.user.id
@@ -121,10 +135,11 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
             msg = f" User id:{peer} rejected to call"
         else:
             await self.send_json({
-                "error": f"invalid request : {kind}, failed to {kind}"
+                "error": "invalid request"
             })
             return
 
+        print(f'send to call_{target}')
         await self.channel_layer.group_send(
                 f'call_{target}',
                 {
@@ -132,19 +147,17 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
                     "request":request,
                     "peer":peer,
                     "msg":msg,
-                })
-
+                }) 
+               
     # manage group request
     async def group_call(self,content,kind):
-        target = content.get('target',None)
-        request = content.get('request',None)
-        group = content.get('group',None)
+        target = content.get('target',None) 
+        request = content.get('request',None) 
+        group = content.get('group',None) 
         peer = self.user.id
 
         if target == None and group == None:
-            await self.send_json({
-                "error": "target and group are both none"
-            })
+            await self.send_json({ "error": "target and group are both none" })
             return
         elif target != None:
             target = f'call_{target}'
@@ -270,8 +283,13 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
         )
 
     async def disconnect(self, code):
-        await self.channel_layer.group_discard(
-            self.user_channel,
+        if self.user_channel:
+            await self.channel_layer.group_discard(
+                self.user_channel,
+                self.channel_name
+            )
+        if self.group_channel:
+            await self.channel_layer.group_discard(
             self.group_channel,
             self.channel_name
-        )
+            )

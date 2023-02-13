@@ -7,6 +7,13 @@
 
 const websocket_url = "ws://127.0.0.1:8000/ws/call/"
 
+const stun = { iceServers: [
+    {
+      urls: "stun:stun.l.google.com:19302"
+    }
+  ]
+}
+
 let tokenInput = document.getElementById("login-token")
 let tokenBtn = document.getElementById("login-btn")
 let call = document.getElementById("call")
@@ -81,7 +88,6 @@ function wsMessageHandler(event){
     // accept or reject call
     accept = confirm("Accept call from id:",peer," ?") 
     let answer = {
-      request,
       target : peer
     }
     if (accept) {
@@ -89,21 +95,24 @@ function wsMessageHandler(event){
     } else {
       answer.request = 'call.reject'
     }
-    ws.send(answer)
+    console.log("call answer:",answer)
+    ws.send(JSON.stringify(answer))
   } else if (req=="call.accept") {
     createOffer(peer,group)
   } else if (req=="call.reject") {
+    console.log("call rejected by:",peer)
     alert("Call rejected by id:",peer)
 
     // manage group
   } else if (req=="group.new"){
+    console.log("converted to group call:",data['group'])
     alert("Converted to group call :",data['group'])
     group = data['group']
     
   } else if (req=="group.invite"){
-    accept = confirm("Accept group call invite from id:",peer," ?") 
+    console.log("invited to group call:",data['group'])
+    accept = confirm("Accept group call invite from id:" + peer +" ?") 
     let answer = {
-      request,
       target : peer
     }
     if (accept) {
@@ -112,11 +121,15 @@ function wsMessageHandler(event){
     } else {
       answer.request = 'group.reject'
     }
-    ws.send(answer)
-  } else if (req="group.accept") {
+    ws.send(JSON.stringify(answer))
+  } else if (req=="group.accept") {
+    console.log(req)
+    console.log(data)
+    console.log(peer," accepted a group call:",data['group'])
+    alert("Group call invitation has accepted by: "+ peer)
     createOffer(peer,group)
-  } else if (req="group.reject") {
-    alert("Group call rejected by id:",peer)
+  } else if (req=="group.reject") {
+    alert("Group call rejected by id:"+ peer)
   }
 
   if (type=='sdp.offer') { // receive a call
@@ -196,12 +209,17 @@ function sendSignal(type,target,sdp,group) {
   ws.send(j)
 }
 
-function createOffer(target,group){
-  let peerConnection = new RTCPeerConnection(null);
+function createPeerConnection(){
+  let peerConnection = new RTCPeerConnection();
   addLocalTracks(peerConnection);
+  return peerConnection
+}
 
+function createOffer(target,group){
 
-  let dataChannel= peerConnection.createDataChannel('channel')
+  peerConnection = createPeerConnection()
+
+  let dataChannel= peerConnection.createDataChannel('data_channel')
   dataChannel.addEventListener('open',()=> {
     console.log("Datachannel Opened")
   })
@@ -229,25 +247,36 @@ function createOffer(target,group){
         JSON.stringify(peerConnection.localDescription))
       return
     }
+    console.log("icecandidate event:",ev)
 
-    sendSignal('sdp.offer',target,
-      peerConnection.localDescription,group
-    )
   })
 
-  peerConnection.createOffer()
-  .then(offer=>peerConnection.setLocalDescription(offer))
-  .then(()=>{
-    console.log('localDescription setted')
+  peerConnection.addEventListener("onnegotiationneeded",(ev) =>{
+    console.log("event occured:",ev)
+    peerConnection.createOffer()
+    .then((offer)=>peerConnection.setLocalDescription(offer))
+    .then(()=>{
+      console.log('localDescription setted')
+      sendSignal('sdp.offer',target,
+        peerConnection.localDescription,group
+      )
+    })
+    .catch((reason)=>{
+      console.log('error on createOffer:',reason)
+    })
   })
 }
 
 function createAnswer(offer,target,group){
-  let peerConnection = new RTCPeerConnection(null);
-  addLocalTracks(peerConnection);
+
+  const desc = new RTCSessionDescription(offer) 
+
+  peerConnection = createPeerConnection()
+
 
   let remoteVideo = createVideo(target)
   setOnTrack(peerConnection,remoteVideo)
+
 
   peerConnection.addEventListener("datachannel", e => {
     peerConnection.dc = e.channel
@@ -277,27 +306,33 @@ function createAnswer(offer,target,group){
         JSON.stringify(peerConnection.localDescription))
       return
     }
-
-    sendSignal('adp.answer',target,
-      peerConnection.localDescription,group
-    )
+    console.log("icecandidate event:",ev)
   })
 
-  peerConnection.setRemoteDescription(offer)
+  peerConnection.setRemoteDescription(desc)
   .then(()=>{
+    //setting remote description
     console.log("Remote description setted for id:",target)
+
+  }).then(()=>{
+    // add local tracks to created PeerConnection
+    addLocalTracks(peerConnection)
     return peerConnection.createAnswer()
   })
   .then(answer=>{
     console.log("Answer Created",answer)
     peerConnection.setLocalDescription(answer)
+
+    sendSignal('sdp.answer',target,
+      peerConnection.localDescription,group
+      )
   })
 }
 
 function addLocalTracks(peer) {
-  localStream.getTracks().forEach(track => {
+  localStream.getTracks().forEach((track) => {
     peer.addTrack(track,localStream)
-  });
+  })
 }
 
 function createVideo(target) {
@@ -330,6 +365,7 @@ function call_by_id(){
     'target':callId.value
   }
   let t = JSON.stringify(j)
+  console.log(t)
   ws.send(t)
 }
 
@@ -339,6 +375,7 @@ function invite_by_id(){
     'target':callId.value
   }
   let t = JSON.stringify(j)
+  console.log(t)
   ws.send(t)
 }
 
@@ -348,5 +385,6 @@ function creategroup(){
     'target':callId.value
   }
   let t = JSON.stringify(j)
+  console.log(t)
   ws.send(t)
 }
