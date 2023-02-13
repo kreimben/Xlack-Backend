@@ -11,6 +11,8 @@ let tokenInput = document.getElementById("login-token")
 let tokenBtn = document.getElementById("login-btn")
 let call = document.getElementById("call")
 let callBtn = document.getElementById("call-btn")
+let callBtnGroup = document.getElementById("call-btn-group")
+let callBtnGroupInvite = document.getElementById("call-btn-group-invite")
 let callId = document.getElementById("call-id")
 
 let user_id = null
@@ -45,6 +47,8 @@ tokenBtn.addEventListener('click',()=>{
   })
   call.hidden= false
   callBtn.addEventListener("click",call_by_id)
+  callBtnGroup.addEventListener("click",creategroup)
+  callBtnGroupInvite.addEventListener("click",invite_by_id)
   }
 )
 function wsAuthHandler(event){
@@ -321,5 +325,28 @@ function setOnTrack(peer,remoteVideo) {
 }
 
 function call_by_id(){
+  let j = {
+    'request':'call.new',
+    'target':callId.value
+  }
+  let t = JSON.stringify(j)
+  ws.send(t)
+}
 
+function invite_by_id(){
+  let j = {
+    'request':'group.invite',
+    'target':callId.value
+  }
+  let t = JSON.stringify(j)
+  ws.send(t)
+}
+
+function creategroup(){
+  let j = {
+    'request':'group.new',
+    'target':callId.value
+  }
+  let t = JSON.stringify(j)
+  ws.send(t)
 }
