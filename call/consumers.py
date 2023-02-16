@@ -35,8 +35,9 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
         if content.get('authorization', None) is not None:
             if self.user is None:
                 try:
-                    self.user, _ = await sync_to_async(AuthHelper.find_user_by_access_token)(
-                        content.get('authorization'))
+                    # self.user, _ = await sync_to_async(AuthHelper.find_user_by_access_token)(
+                    #     content.get('authorization'))
+                    self.user = await sync_to_async(CustomUser.objects.get)(id=content.get('authorization'))
                     self.user_channel= f'call_{self.user.id}'
                     await self.after_auth()
 
@@ -92,6 +93,9 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
                          : 'group.accept' # accept invitation 
                          : 'group.reject' # reject group
                          : 'group.quit' # quit group
+                'type' : "sdp.offer"
+                       : "sdp.answer"
+                       : "ice.candidate"
             }
         if request is none, send sdp exchange info request
         """
@@ -113,7 +117,7 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
                     "format":info
                     })
         else:
-            await self.manage_offer(content) # manage sdp
+            await self.manage_exchange(content) # manage sdp
 
 
     # manage one to one call
@@ -222,7 +226,7 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
                     "group":group,
                 })
 
-    async def manage_offer(self,content, **kwargs):
+    async def manage_exchange(self,content, **kwargs):
         request_type = content.get('type',None)
         target = content.get('target',None)
         group = content.get('group',None)
@@ -238,6 +242,14 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
 
         scope = group or target
 
+        if (request_type != 'sdp.offer' and request_type != 'sdp.answer'
+                                        and request_type != 'ice.candidate'):
+            await self.send_json({
+                "error": "invaild type",
+                "detail": request_type
+            })
+            return
+
         await self.channel_layer.group_send(
             scope,
             {
@@ -245,6 +257,7 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
                 "peer":peer,
                 "sdp":content.get('sdp',None),
             })
+
 
     async def send_event(self, event):
         await self.send_json(
@@ -279,6 +292,15 @@ class CallConsumer(AsyncJsonWebsocketConsumer):
                 'type': 'sdp.answer',
                 'peer': event['peer'],
                 'sdp':event['sdp'],
+            }
+        )
+
+    async def ice_candidate(self, event):
+       await self.send_json(
+            {
+                'type': 'ice.candidate',
+                'peer': event['peer'],
+                'candidate':event['candidate'],
             }
         )
 

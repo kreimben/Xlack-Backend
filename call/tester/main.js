@@ -7,11 +7,9 @@
 
 const websocket_url = "ws://127.0.0.1:8000/ws/call/"
 
-const stun = { iceServers: [
-    {
+const stun = { iceServers: [{
       urls: "stun:stun.l.google.com:19302"
-    }
-  ]
+    }]
 }
 
 let tokenInput = document.getElementById("login-token")
@@ -29,6 +27,7 @@ let isAuthorized = false
 let group = null
 let peers = {}
 
+let resentPeerConnection
 
 tokenBtn.addEventListener('click',()=>{
   token = tokenInput.value;
@@ -98,6 +97,8 @@ function wsMessageHandler(event){
     console.log("call answer:",answer)
     ws.send(JSON.stringify(answer))
   } else if (req=="call.accept") {
+    console.log("handling:",req)
+    console.log("creating Offer for",peer,group)
     createOffer(peer,group)
   } else if (req=="call.reject") {
     console.log("call rejected by:",peer)
@@ -131,8 +132,7 @@ function wsMessageHandler(event){
   } else if (req=="group.reject") {
     alert("Group call rejected by id:"+ peer)
   }
-
-  if (type=='sdp.offer') { // receive a call
+  else if (type=='sdp.offer') { // receive a call
     let offer = data['sdp']
     createAnswer(offer,data['peer'],group)
     return
@@ -144,6 +144,12 @@ function wsMessageHandler(event){
     console.log("setting remote description:",answer)
     peer.setRemoteDescription(answer)
     return
+  } 
+  else if (type=='ice.candidate') { // ice candidate info received
+    const candidate = new RTCIceCandidate(data['candidate'])
+    let peer_id = data['peer']
+    let peer = peers[peer_id][0] //array [peerConnection|data channel]
+    peer.addIceCandidate(candidate).catch((err)=>console.log(err))
   }
 }
 
@@ -195,7 +201,7 @@ function setLocalStream(){
 }
 setLocalStream()
 
-function sendSignal(type,target,sdp,group) {
+function sendSignalSDP(type,target,sdp,group) {
   let t = {
     'type':type,
     'target':target,
@@ -209,17 +215,32 @@ function sendSignal(type,target,sdp,group) {
   ws.send(j)
 }
 
+function sendSignalCandidate(type,target,candidate,group) {
+  let t = {
+    'type':type,
+    'target':target,
+    'candidate':candidate
+  }
+  if (group) {
+    t.group = group
+  }
+  j = JSON.stringify(t)
+  console.log("sendSignal:",j)
+  ws.send(j)
+}
+
 function createPeerConnection(){
-  let peerConnection = new RTCPeerConnection();
+  let peerConnection = new RTCPeerConnection(stun);
   addLocalTracks(peerConnection);
   return peerConnection
 }
 
 function createOffer(target,group){
 
-  peerConnection = createPeerConnection()
-
+  let peerConnection = new RTCPeerConnection()
+  addLocalTracks(peerConnection)
   let dataChannel= peerConnection.createDataChannel('data_channel')
+
   dataChannel.addEventListener('open',()=> {
     console.log("Datachannel Opened")
   })
@@ -232,6 +253,7 @@ function createOffer(target,group){
     let iceConnectionState = peerConnection.iceConnectionState
     if(iceConnectionState ==="failed"||iceConnectionState==="disconnected"||
     iceConnectionState==="closed") {
+      console.log("ice connection state changed")
       console.log("remove peer connection:",target)
       delete peers[target];
       if(iceConnectionState!='closed'){
@@ -242,43 +264,59 @@ function createOffer(target,group){
   })
 
   peerConnection.addEventListener("icecandidate",(ev)=>{
+    console.log("icecandidate event:",ev)
     if(ev.candidate){
       console.log("New icecandidate :",
-        JSON.stringify(peerConnection.localDescription))
+        JSON.stringify(ev.candidate))
+      sendSignalCandidate("ice.candidate",target,ev.candidate,group)
       return
+    } else { // ice candidate gather completed
+      sendSignalSDP('sdp.offer',target,
+        peerConnection.localDescription,group
+      )
     }
-    console.log("icecandidate event:",ev)
-
   })
 
-  peerConnection.addEventListener("onnegotiationneeded",(ev) =>{
-    console.log("event occured:",ev)
-    peerConnection.createOffer()
+  peerConnection.createOffer() // ice candidate gathering completed
     .then((offer)=>peerConnection.setLocalDescription(offer))
     .then(()=>{
       console.log('localDescription setted')
-      sendSignal('sdp.offer',target,
-        peerConnection.localDescription,group
-      )
-    })
+          })
     .catch((reason)=>{
       console.log('error on createOffer:',reason)
     })
-  })
+
+  // peerConnection.addEventListener("onnegotiationneeded",(ev) =>{
+  //   console.log("event occured:",ev)
+  //   peerConnection.createOffer()
+  //   .then((offer)=>peerConnection.setLocalDescription(offer))
+  //   .then(()=>{
+  //     console.log('localDescription setted')
+  //     sendSignalSDP('sdp.offer',target,
+  //       peerConnection.localDescription,group
+  //     )
+  //   })
+  //   .catch((reason)=>{
+  //     console.log('error on createOffer:',reason)
+  //   })
+  // })
 }
 
 function createAnswer(offer,target,group){
 
   const desc = new RTCSessionDescription(offer) 
 
-  peerConnection = createPeerConnection()
+  peerConnection = new RTCPeerConnection()
+  addLocalTracks(peerConnection)
 
+  recentPeerConnection=peerConnection
 
   let remoteVideo = createVideo(target)
   setOnTrack(peerConnection,remoteVideo)
 
 
   peerConnection.addEventListener("datachannel", e => {
+    console.log("datachannel event occured:",e)
     peerConnection.dc = e.channel
     console.log("dataChannel setted:",e.channel)
     peerConnection.dc.addEventListener('open',()=> {
@@ -289,6 +327,7 @@ function createAnswer(offer,target,group){
   })
 
   peerConnection.addEventListener("iceconnectionstatechange",(ev)=>{
+    console.log("iceconnectionstatechange event:",ev)
     let iceConnectionState = peerConnection.iceConnectionState;
     if(iceConnectionState ==="failed"||iceConnectionState==="disconnected"||
     iceConnectionState==="closed") {
@@ -301,31 +340,31 @@ function createAnswer(offer,target,group){
   })
 
   peerConnection.addEventListener("icecandidate",(ev)=>{
+    console.log("icecandidate event:",ev)
     if(ev.candidate){
       console.log("New icecandidate :",
         JSON.stringify(peerConnection.localDescription))
+      sendSignalCandidate("ice.candidate",target,ev.candidate,group)
       return
+    } else {
+      sendSignalSDP('sdp.answer',target,
+      peerConnection.localDescription,group
+      )
     }
-    console.log("icecandidate event:",ev)
   })
 
+  //setting remote description
   peerConnection.setRemoteDescription(desc)
   .then(()=>{
-    //setting remote description
     console.log("Remote description setted for id:",target)
 
   }).then(()=>{
-    // add local tracks to created PeerConnection
-    addLocalTracks(peerConnection)
     return peerConnection.createAnswer()
   })
   .then(answer=>{
     console.log("Answer Created",answer)
     peerConnection.setLocalDescription(answer)
-
-    sendSignal('sdp.answer',target,
-      peerConnection.localDescription,group
-      )
+    
   })
 }
 
@@ -355,6 +394,8 @@ function setOnTrack(peer,remoteVideo) {
   let remoteStream = new MediaStream()
   remoteVideo.srcObject=remoteStream
   peer.addEventListener('track',async (ev) =>{
+    console.log("adding remote stream to local:",remoteVideo.id)
+    console.log("event:",ev)
     remoteStream.addTrack(ev.track,remoteStream)
   })
 }
