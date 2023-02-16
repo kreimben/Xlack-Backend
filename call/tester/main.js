@@ -54,7 +54,7 @@ tokenBtn.addEventListener('click',()=>{
   call.hidden= false
   callBtn.addEventListener("click",call_by_id)
   callBtnGroup.addEventListener("click",creategroup)
-  callBtnGroupInvite.addEventListener("click",invite_by_id)
+  callBtnGroupInvite.addEventListener("click",invite_by_id(group))
   }
 )
 function wsAuthHandler(event){
@@ -413,8 +413,9 @@ function call_by_id(){
 function invite_by_id(){
   let j = {
     'request':'group.invite',
-    'target':callId.value
+    'target':callId.value,
   }
+  j['group'] = group
   let t = JSON.stringify(j)
   console.log(t)
   ws.send(t)
