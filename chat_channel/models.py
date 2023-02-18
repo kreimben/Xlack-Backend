@@ -3,6 +3,7 @@ from uuid import uuid4
 from django.db import models
 from django.db.models import Prefetch
 
+from Hasher.Hasher import Hasher
 from custom_user.models import CustomUser
 from workspace.models import Workspace
 from xlack import settings
@@ -31,7 +32,7 @@ class DMManager(models.Manager):
 # The reason I named `ChatChannel` is avoiding confusion with `django channels`.
 class ChatChannel(models.Model):
     name = models.CharField(max_length=50)
-    hashed_value = models.CharField(db_index=True, max_length=10, unique=True, default=str(uuid4())[:8])
+    hashed_value = models.CharField(db_index=True, max_length=10, unique=True, default=Hasher.hash)
     is_dm = models.BooleanField(default=False)
     workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE,
                                   null=False, blank=False,
