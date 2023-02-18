@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>WEB RTC TEST</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="css/index.css" rel="stylesheet">
+</head>
+
+<body>
+
+  <div id="login">
+    <input id="login-token"><button id="login-btn">Login</button>
+  </div>
+  <div id="call" hidden=true>
+    <input id="call-id"><button id="call-btn">Call</button>
+    <button id="call-btn-group">Change to group call</button>
+    <button id="call-btn-group-invite">Invite to group call</button>
+  </div>
+
+  <div id="videos" hidden=true>
+    <button id="video-btn-audio">Unmute Audio</button>
+    <button id="video-btn-video">Hide Video</button>
+
+    <div id="video-self-wrapper">
+      <video class="video-self" id="video-self" autoplay playsinline></video>
+    </div>
+    <div id="video-others-wrapper">
+    </div>
+
+
+  </div>
+
+</body>
+<script src="main.js"></script>
+
+</html>
