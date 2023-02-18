@@ -1,9 +1,12 @@
-import hashlib
 import datetime
+import hashlib
 import random
+from uuid import uuid4
+
 
 class Hasher:
-    def hash(string : str):
+    @staticmethod
+    def hash(string: str = str(uuid4())):
         """
         take string and return hash string
         """
