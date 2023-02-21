@@ -178,8 +178,8 @@ REST_FRAMEWORK = {
     'PAGINATE_BY': 10,
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',  # 이거 없애면 스웨거 문서 접근 못함.
+        'rest_framework.authentication.TokenAuthentication',  # 이거 없애면 스웨거 문서 접근 못함.
         'rest_framework.authentication.BasicAuthentication'
     ],
     'DEFAULT_PERMISSION_CLASSES': [
@@ -259,12 +259,14 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
-REST_USE_JWT = True
-SITE_ID = 1
-JWT_AUTH_COOKIE_USE_CSRF = False
+# REST_USE_JWT = True
 
-REST_AUTH_SERIALIZERS = {
-    'USER_DETAILS_SERIALIZER': 'custom_user.serializers.CustomUserSerializer'
+REST_AUTH = {
+    'USE_JWT': True,
+    'SITE_ID': 1,
+    'JWT_AUTH_HTTPONLY': False,
+    'JWT_AUTH_COOKIE_USE_CSRF': False,
+    'USER_DETAILS_SERIALIZER': 'custom_user.serializers.CustomUserSerializer',
 }
 
 AUTHENTICATION_BACKENDS = [
