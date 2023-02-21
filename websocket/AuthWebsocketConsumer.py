@@ -4,6 +4,8 @@ from abc import abstractmethod, ABC
 import rest_framework_simplejwt
 from asgiref.sync import sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from django.utils.encoding import smart_str
+from pytz import unicode
 from rest_framework_simplejwt.exceptions import TokenError
 
 from AuthHelper import AuthHelper
@@ -14,6 +16,8 @@ class AuthWebsocketConsumer(AsyncJsonWebsocketConsumer, ABC):
     user: CustomUser | None = None  # To save current user information.
 
     async def connect(self):
+        self.scope['subprotocol'] = 'UTF-8'
+
         await self.before_accept()
         await self.accept()
         await self.after_accept()
@@ -31,33 +35,37 @@ class AuthWebsocketConsumer(AsyncJsonWebsocketConsumer, ABC):
         Client should authorize to server only first time.
         """
 
-        if content.get('authorization', None) is not None:
-            if self.user is None:
-                try:
-                    self.user, _ = await sync_to_async(AuthHelper.find_user_by_access_token)(
-                        content.get('authorization'))
-                    await self.after_auth()
-                    await self.channel_layer.group_add(
-                        self.room_group_name,
-                        self.channel_name
-                    )
-                except rest_framework_simplejwt.exceptions.TokenError as e:
-                    await self.send_json({
-                        'success': False,
-                        'msg': f'{str(e)}'
-                    }, close=True)
-                except CustomUser.DoesNotExist:
-                    await self.send_json({
-                        'success': False,
-                        'msg': 'No such user'
-                    }, close=True)
-            else:
+        if self.user is None and content.get('authorization', None) is not None:
+            try:
+                self.user, _ = await sync_to_async(AuthHelper.find_user_by_access_token)(content.get('authorization'))
+                await self.after_auth()
+                await self.channel_layer.group_add(
+                    self.room_group_name,
+                    self.channel_name
+                )
+            except rest_framework_simplejwt.exceptions.TokenError as e:
+                await self.send_json({
+                    'success': False,
+                    'msg': f'{str(e)}'
+                }, close=True)
+            except CustomUser.DoesNotExist:
+                await self.send_json({
+                    'success': False,
+                    'msg': 'No such user'
+                }, close=True)
+        elif self.user:
+            if content.get('authorization', None) is not None:
                 await self.send_json({
                     'msg': 'You already have auth info in server.\nIf you want to re-auth, Just re-connect server.',
                     'user': f'user_id: {self.user.id}'
                 })
+            elif content.get('message', None) is not None:
+                await self.from_client(content, **kwargs)
         else:
-            await self.from_client(content, **kwargs)
+            await self.send_json({
+                'success': False,
+                'msg': '인증 먼저 하세요.'
+            })
 
     @abstractmethod
     async def from_client(self, content, **kwargs):
