@@ -33,7 +33,8 @@ class WorkspaceView(generics.CreateAPIView,
             # 파이썬 랜덤 uuid값은 8자리 수 뒤에 -가 한글자 나와서 8자까지만 사용.
             workspace: Workspace = s.save(hashed_value=str(uuid4())[:8])
             workspace.members.add(request.user)
-
+            workspace.save()
+            s = self.get_serializer(workspace)
             return Response(status=status.HTTP_200_OK, data=s.data)
         else:
             return JsonResponse(status=status.HTTP_400_BAD_REQUEST, data={'msg': s.errors})
