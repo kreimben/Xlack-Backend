@@ -28,8 +28,7 @@ class ChatSerializer(serializers.Serializer):
 
 
 class ChatBookmarkSerializer(serializers.ModelSerializer):
-    chat_id = serializers.PrimaryKeyRelatedField(
-        many=False, queryset=Chat.objects.all())
+    chat_id = serializers.PrimaryKeyRelatedField(many=False, queryset=Chat.objects.all())
     created_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
