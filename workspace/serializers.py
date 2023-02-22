@@ -14,7 +14,7 @@ class BaseWorkspaceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Workspace
-        exclude = ['id']
+        exclude = ["id"]
 
 
 class NameWorkspaceSerializer(BaseWorkspaceSerializer):
