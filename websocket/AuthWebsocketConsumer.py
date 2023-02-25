@@ -59,7 +59,7 @@ class AuthWebsocketConsumer(AsyncJsonWebsocketConsumer, ABC):
                     'msg': 'You already have auth info in server.\nIf you want to re-auth, Just re-connect server.',
                     'user': f'user_id: {self.user.id}'
                 })
-            elif content.get('message', None) is not None:
+            else:
                 await self.from_client(content, **kwargs)
         else:
             await self.send_json({
