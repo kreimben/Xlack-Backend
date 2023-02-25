@@ -46,10 +46,9 @@ class NotificationsConsumer(AuthWebsocketConsumer):
         if content.get('refresh', None) is True:
             r = await self._get_notification_list(self.user.id)
             await self.send_json(r)
-        elif content.get('channel_hashed_value', None) is not None:
-            channel_hashed_value = content.get('channel_hashed_value', None)
-            await self._read_notification(receiver_id=self.user.id, channel_hashed_value=channel_hashed_value)
-            await self.send_json({'msg': 'OK'})
+        elif (hashed_value := content.get('channel_hashed_value', None)) is not None:
+            await self._read_notification(receiver_id=self.user.id, channel_hashed_value=hashed_value)
+            await self.send_json({'success': True, 'msg': 'OK'})
 
     async def notifications_broadcast(self, event):
         r = await self._get_notification_list(event.get('user_id', None))
