@@ -18,8 +18,8 @@ class NotificationsConsumer(AuthWebsocketConsumer):
 
     @database_sync_to_async
     def _read_notification(self, receiver_id: int, channel_hashed_value: str):
-        notifications: [Notification] = Notification.objects.filter(receiver_id=receiver_id,
-                                                                    channel__hashed_value=channel_hashed_value)
+        notifications: [Notification] = list(Notification.objects.filter(receiver_id=receiver_id,
+                                                                         channel__hashed_value=channel_hashed_value))
         for noti in notifications:
             noti.had_read = True
             noti.save()
