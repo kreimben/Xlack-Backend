@@ -13,14 +13,14 @@ class NotificationAdmin(admin.ModelAdmin):
 
     @admin.action(description='선택한 알림들을 읽음 처리 합니다.')
     def make_read(self, request, queryset):
-        queryset.had_read = True
+        queryset.update(had_read=True)
         self.message_user(request,
-                          f'{queryset}이 읽음 처리 됐습니다.' if len(queryset) == 1 else f'{len(queryset)}개의 알림이 읽음 처리 됐습니다.',
+                          f'{len(queryset)}개의 알림이 읽음 처리 됐습니다.',
                           messages.SUCCESS)
 
     @admin.action(description='선택한 알림들을 안읽음 처리 합니다.')
     def make_unread(self, request, queryset):
-        queryset.had_read = False
+        queryset.update(had_read=False)
         self.message_user(request,
-                          f'{queryset}이 안읽음 처리 됐습니다.' if len(queryset) == 1 else f'{len(queryset)}개의 알림이 안읽음 처리 됐습니다.',
+                          f'{len(queryset)}개의 알림이 안읽음 처리 됐습니다.',
                           messages.SUCCESS)
