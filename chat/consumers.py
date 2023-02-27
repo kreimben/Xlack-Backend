@@ -24,6 +24,16 @@ class ChatConsumer(AuthWebsocketConsumer):
         await super().after_auth()
 
     async def from_client(self, content, **kwargs):
+        # Check that this client is member of given chat_channel.
+        async for member in self.chat_channel.members.all():
+            if self.user == member:
+                break
+        else:
+            await self.send_json({
+                'success': False,
+                'msg': 'You are not in this channel.'
+            })
+
         f = None
         file_id = content.get('file_id', None)
         if file_id is not None:
