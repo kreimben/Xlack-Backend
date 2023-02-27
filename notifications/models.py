@@ -11,6 +11,7 @@ class Notification(models.Model):
     Notification model
     Many Notification per one chat
     """
+
     receiver = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
