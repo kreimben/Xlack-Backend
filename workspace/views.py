@@ -1,13 +1,17 @@
 from uuid import uuid4
 
+from django.db.models import Prefetch
 from django.http import JsonResponse
+from drf_yasg import openapi
 from drf_yasg.openapi import TYPE_OBJECT, TYPE_STRING, Schema
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, permissions, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from custom_user.models import CustomUser
+from chat.models import Chat
+from chat.serializers import BookmarkedChatsSerializer
+from chat_channel.models import ChatChannel
 from workspace.models import Workspace
 from workspace.serializers import BaseWorkspaceSerializer, NameWorkspaceSerializer
 
@@ -114,3 +118,28 @@ class WorkspaceView(
             return Response(status=status.HTTP_200_OK)
         except Workspace.DoesNotExist as e:
             return JsonResponse(status=status.HTTP_404_NOT_FOUND, data={"msg": str(e)})
+
+
+class WorkspaceBookmarkedChatView(generics.ListAPIView):
+    serializer_class = NameWorkspaceSerializer
+    # permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get']
+
+    def get_queryset(self):
+        # Get workspace hashed value.
+        # Filter chat using workspace hashed value and That I bookmarked.
+        whv = self.kwargs.get('workspace_hashed_value')
+        chats = Chat.objects \
+            .select_related('chatter', 'file') \
+            .prefetch_related('bookmarks', 'reaction') \
+            .prefetch_related(Prefetch('channel',
+                                       queryset=ChatChannel.objects.all().prefetch_related('admins', 'members'))) \
+            .filter(channel__workspace__hashed_value__exact=whv, bookmarks__issuer=self.request.user.id)
+
+        return chats
+
+    @swagger_auto_schema(responses={200: openapi.Response('내가 북마크한 채팅만 리스트로 보내줍니다.', BookmarkedChatsSerializer(many=True))})
+    def get(self, request, *args, **kwargs):
+        q = self.get_queryset()
+        response_serializer = BookmarkedChatsSerializer(q, many=True)
+        return Response(response_serializer.data)
