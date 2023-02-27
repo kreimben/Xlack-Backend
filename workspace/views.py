@@ -27,7 +27,7 @@ class WorkspaceView(
     http_method_names = ["get", "post", "patch", "delete"]
 
     @swagger_auto_schema()
-    def create(self, request: Request, *args, **kwargs):
+    def post(self, request: Request, *args, **kwargs):
         name = request.data.get("name", None)
 
         if not name:
@@ -39,7 +39,10 @@ class WorkspaceView(
 
         if s.is_valid():
             # 파이썬 랜덤 uuid값은 8자리 수 뒤에 -가 한글자 나와서 8자까지만 사용.
-            s.save(hashed_value=str(uuid4())[:8], members={request.user})
+            workspace: Workspace = s.save(hashed_value=str(uuid4())[:8])
+            workspace.members.add(request.user)
+            workspace.save()
+            s = self.get_serializer(workspace)
             return Response(status=status.HTTP_200_OK, data=s.data)
         else:
             return JsonResponse(
