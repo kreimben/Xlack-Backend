@@ -1,13 +1,13 @@
-from django.http import JsonResponse
-from rest_framework import status, generics, permissions
-from rest_framework.request import Request
+import json
 
-from drf_yasg.openapi import Schema, TYPE_OBJECT, TYPE_NUMBER, TYPE_STRING
+from django.http import JsonResponse
+from drf_yasg.openapi import TYPE_NUMBER, TYPE_OBJECT, TYPE_STRING, Schema
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework import generics, permissions, status
+from rest_framework.request import Request
 
 from notifications import api
 from notifications.serializers import NotificationSerializer
-import json
 
 
 class NotificationView(
@@ -27,9 +27,7 @@ class NotificationView(
                 data={"msg": "no recevier"}, status=status.HTTP_400_BAD_REQUEST
             )
         else:
-            return JsonResponse(
-                api.get_notification_list(receiver), safe=False
-            )
+            return JsonResponse(api.get_notification_list(receiver), safe=False)
 
     @swagger_auto_schema(
         request_body=Schema(
@@ -71,7 +69,6 @@ class NotificationView(
         request_body=Schema(
             type=TYPE_OBJECT,
             properties={
-                "dm": Schema(type=TYPE_NUMBER, description="id_of_dm_receiver"),
                 "channel": Schema(
                     type=TYPE_STRING, description="hashed_value of channel"
                 ),
@@ -82,27 +79,20 @@ class NotificationView(
         """
         Debug use only,
         create notification directly.
-        if it's DM, {dm = "id_of_receiver"}
-        if it's channel msg, {channel = "hashed_value of channel"}
-        only one sources are allowed
+        {channel = "hashed_value of channel"}
         """
 
         sender = request.user
         channel = request.data.get("channel", None)
         receiver = request.data.get("dm", None)
 
-        if channel == None and receiver == None:
+        if channel == None:
             return JsonResponse(
-                data={"msg": "no sources (channel and DM receiver)"},
+                data={"msg": "no sources (channel)"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if channel != None and receiver != None:
-            return JsonResponse(
-                data={"msg": "duplicate sources"}, status=status.HTTP_400_BAD_REQUEST
-            )
-
-        api.notify(sender, channel=channel, receiver=receiver)
+        api.notify_rest(sender.id, channel_hashed_value=channel)
 
         return JsonResponse(
             data={"msg": "notification created"},

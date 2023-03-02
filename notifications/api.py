@@ -1,17 +1,37 @@
 from typing import Dict, List
 
 from chat.models import Chat
-from notifications.parser import Parser
+
+from .models import Notification
 
 
-def notify(chat: Chat = None):
+def notify_via_signal(chat: Chat = None):
     """
-    create notification with provided `sender`,`channel`
-    find where the sender belongs to, and create multiple notifications by receiver
+    create notification via signal triggered by saving chat
     """
+    sender = chat.chatter
+    channel = chat.channel
+    members = list(chat.channel.members.all())
+
+    result = list()
+    for member in members:
+        if member != sender:
+            result.append(
+                Notification(
+                    sender=sender,
+                    receiver=member,
+                    channel=channel,
+                    chat=chat,
+                    had_read=False,
+                )
+            )
+
+    return Notification.objects.save_group(result)
 
     return Parser.create_via_sender(
-        sender_id=chat.chatter.id, chat=chat, channel_hashed_value=chat.channel.hashed_value
+        sender_id=chat.chatter.id,
+        chat=chat,
+        channel_hashed_value=chat.channel.hashed_value,
     )
 
 
