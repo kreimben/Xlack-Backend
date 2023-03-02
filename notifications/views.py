@@ -81,21 +81,19 @@ class NotificationView(
         create notification directly.
         {channel = "hashed_value of channel"}
         """
-
-        sender = request.user
         channel = request.data.get("channel", None)
-        receiver = request.data.get("dm", None)
+        chat_id = request.data.get("chat_id", None)
 
-        if channel == None:
+        if channel == None and chat_id == None:
             return JsonResponse(
-                data={"msg": "no sources (channel)"},
+                data={"msg": "no sources (channel&chat)"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        api.notify_rest(sender.id, channel_hashed_value=channel)
+        noti = api.notify_via_rest(request.user, chat_id, channel_hashed_value=channel)
 
         return JsonResponse(
-            data={"msg": "notification created"},
+            data={"msg": "notification created", "notifications": noti},
             safe=False,
         )
 
