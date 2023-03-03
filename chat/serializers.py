@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
 from chat.models import Chat, ChatBookmark
-from chat_channel.serializers import ChatChannelSerializer
 from chat_reaction.serializers import ChatReactionSerializer
 from custom_user.serializers import CustomUserSerializer
 from file.serializers import FileSerializer
@@ -14,6 +13,7 @@ class ChatSerializer(serializers.Serializer):
     has_bookmarked = serializers.BooleanField(read_only=True)
     chatter = CustomUserSerializer(many=False, read_only=True)
     reaction = ChatReactionSerializer(many=True)  # For optimizing codes. And no performance issues either.
+    file = FileSerializer(read_only=True)
     created_at = serializers.DateTimeField(read_only=True)
 
     def create(self, validated_data):
@@ -32,7 +32,8 @@ class ChatSerializer(serializers.Serializer):
 class BookmarkedChatsSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
     message = serializers.CharField(read_only=True)
-    channel = ChatChannelSerializer(many=False, read_only=True)
+    channel = serializers.PrimaryKeyRelatedField(many=False,
+                                                 read_only=True)  # ChatChannelSerializer(many=False, read_only=True)
     chatter = CustomUserSerializer(many=False, read_only=True)
     reaction = ChatReactionSerializer(many=True)
     file = FileSerializer(read_only=True)
