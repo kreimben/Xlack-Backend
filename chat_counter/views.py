@@ -44,7 +44,7 @@ class CounterView(
     )
     def patch(self, request: Request, *args, **kwargs):
         """
-        update or create chat read counter
+        update or create chat read counter.
         """
         channel = self.kwargs.get("channel__hashed_value", None)
         if channel is None:
@@ -66,5 +66,9 @@ class CounterView(
                 user=user,
                 most_recent_chat=most_recent_chat,
                 is_reading=is_reading,
-            )
+            ),
+            safe=False,
         )
+
+    def get_serializer_class(self):
+        return ChatCounterSerializer

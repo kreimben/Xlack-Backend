@@ -25,6 +25,8 @@ class Counter(models.Model):
         verbose_name = "Read information"
         verbose_name_plural = "Read informations"
         ordering = ["-most_recent_chat__id"]
+        unique_together = [["channel", "user"]]
 
     def __str__(self):
-        return f"{self.user}@{self.channel}:{self.most_recent_chat.id}"
+        recent = self.most_recent_chat.id if self.most_recent_chat else None
+        return f"{self.user}@{self.channel.hashed_value}:{recent}[{self.is_reading}]"
