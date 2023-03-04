@@ -96,4 +96,4 @@ class ChatBookmarkDeleteView(generics.DestroyAPIView):
         chat_bookmark = get_object_or_404(
             ChatBookmark, issuer=request.user, chat_id=chat_id)
         chat_bookmark.delete()
-        return Response(status=status.HTTP_302_FOUND)
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -6,6 +6,7 @@ from drf_yasg import openapi
 from drf_yasg.openapi import TYPE_OBJECT, TYPE_STRING, Schema
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, permissions, status
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -126,6 +127,7 @@ class WorkspaceView(
 class WorkspaceBookmarkedChatView(generics.ListAPIView):
     serializer_class = NameWorkspaceSerializer
     http_method_names = ['get']
+    pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
         # Get workspace hashed value.
@@ -134,8 +136,6 @@ class WorkspaceBookmarkedChatView(generics.ListAPIView):
         chats = Chat.objects \
             .select_related('chatter', 'file') \
             .prefetch_related('bookmarks', 'reaction') \
-            .prefetch_related(Prefetch('channel',
-                                       queryset=ChatChannel.objects.all().prefetch_related('admins', 'members'))) \
             .filter(channel__workspace__hashed_value__exact=whv, bookmarks__issuer=self.request.user.id) \
             .order_by('-created_at')
         return chats
@@ -144,5 +144,12 @@ class WorkspaceBookmarkedChatView(generics.ListAPIView):
         responses={200: openapi.Response('내가 북마크한 채팅만 리스트로 보내줍니다.', BookmarkedChatsSerializer(many=True))})
     def get(self, request, *args, **kwargs):
         q = self.get_queryset()
-        response_serializer = BookmarkedChatsSerializer(q, many=True)
-        return Response(response_serializer.data)
+
+        if page := self.paginate_queryset(q):
+            q = page
+        s = BookmarkedChatsSerializer(q, many=True)
+
+        if page is not None:
+            return self.get_paginated_response(s.data)
+        else:
+            return Response(s.data)
