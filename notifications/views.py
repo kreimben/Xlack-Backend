@@ -33,7 +33,6 @@ class NotificationView(
         request_body=Schema(
             type=TYPE_OBJECT,
             properties={
-                "dm": Schema(type=TYPE_NUMBER, description="id_of_dm_sender"),
                 "channel": Schema(
                     type=TYPE_STRING, description="hashed_value of channel"
                 ),
@@ -42,28 +41,24 @@ class NotificationView(
     )
     def patch(self, request: Request, *args, **kwargs):
         """
-        Read Notification list via sources,
-        if it's DM, {dm = "id_of_sender"}
-        if it's channel msg, {channel = "hashed value"}
-        only one sources are allowed
+        Read Notification list via source, channel_hashed_value
         """
-        receiver = request.user
-        channel = request.data.get("channel", None)
-        dm = request.data.get("dm", None)
 
-        if channel == None and dm == None:
+        channel = request.data.get("channel", None)
+        if channel == None:
             return JsonResponse(
-                data={"msg": "no sources (channel and DM sender)"},
+                data={"msg": "no source (channel)"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if channel != None and dm != None:
-            return JsonResponse(
-                data={"msg": "duplicated sources"}, status=status.HTTP_400_BAD_REQUEST
-            )
 
-        api.read_notification_list(request.user, sender=dm, channel=channel)
+        l = api.read_notification_list(receiver=request.user, channel=channel)
 
-        return JsonResponse(json.dumps(api.get_notification_list(receiver)), safe=False)
+        return JsonResponse(
+            {
+                "notifications_has_been_read": l,
+            },
+            safe=False,
+        )
 
     @swagger_auto_schema(
         request_body=Schema(
@@ -93,7 +88,7 @@ class NotificationView(
         noti = api.notify_via_rest(request.user, chat_id, channel_hashed_value=channel)
 
         return JsonResponse(
-            data={"msg": "notification created", "notifications": noti},
+            data={"msg": "notification created", "notifications created: ": noti},
             safe=False,
         )
 

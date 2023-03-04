@@ -1,5 +1,7 @@
 from typing import Dict, List
 
+from django.db.models import Count, Q
+
 from chat.models import Chat
 from chat_channel.models import ChatChannel
 
@@ -32,7 +34,7 @@ def notify_via_signal(chat: Chat = None):
 
 def notify_via_rest(sender, chat_id, channel_hashed_value):
     """
-    test method for POST
+    test method via POST
     """
     if chat_id == None:
         channel = ChatChannel.objects.prefetch_related("members").get(
@@ -52,7 +54,7 @@ def notify_via_rest(sender, chat_id, channel_hashed_value):
                     )
                 )
 
-        return Notification.objects.save_group(result)
+        return len(Notification.objects.save_group(result))
     else:
         c = (
             Chat.objects.select_related("chatter", "channel")
@@ -67,12 +69,26 @@ def get_notification_list(receiver) -> List[Dict]:
     get notifications belongs to user
     """
 
-    return Parser.get_via_receiver(receiver)
+    noti = Notification.objects.select_related("channel", "receiver").filter(
+        Q(had_read=False) & Q(receiver=receiver)
+    )
+
+    xs = noti.values("channel__hashed_value").annotate(count=Count("had_read"))
+    result = []
+    for x in xs:
+        result.append({"channel": x["channel__hashed_value"], "count": x["count"]})
+    return result
 
 
-def read_notification_list(receiver, sender=None, channel=None):
+def read_notification_list(receiver=None, channel=None):
     """
     find notifications and set them to had read
     """
-
-    Parser.read_notification_list(receiver=receiver, sender=sender, channel=channel)
+    noti = (
+        Notification.objects.select_related("channel", "receiver")
+        .filter(
+            Q(had_read=False) & Q(receiver=receiver) & Q(channel__hashed_value=channel)
+        )
+        .update(had_read=True)
+    )
+    return noti
