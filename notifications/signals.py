@@ -18,13 +18,15 @@ def create_notifications(sender, **kwargs):
     Create notifications after chat models had saved
     """
     chat: Chat = kwargs.get("instance", None)
-    response: [Notification] = api.notify(chat=chat)
+    response: [Notification] = api.notify_via_signal(chat=chat)
     channel_layer = get_channel_layer()
     for noti in response:
         noti: Notification
-        async_to_sync(channel_layer.group_send)(f'{noti.receiver_id}',
-                                                {
-                                                    "type": "notifications.broadcast",
-                                                    "user_id": noti.receiver_id,
-                                                    "recent_chat_id": chat.id,
-                                                })
+        async_to_sync(channel_layer.group_send)(
+            f"{noti.receiver_id}",
+            {
+                "type": "notifications.broadcast",
+                "user_id": noti.receiver_id,
+                "recent_chat_id": chat.id,
+            },
+        )
