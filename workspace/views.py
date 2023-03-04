@@ -125,7 +125,6 @@ class WorkspaceView(
 
 class WorkspaceBookmarkedChatView(generics.ListAPIView):
     serializer_class = NameWorkspaceSerializer
-    # permission_classes = [permissions.IsAuthenticated]
     http_method_names = ['get']
 
     def get_queryset(self):
@@ -137,11 +136,12 @@ class WorkspaceBookmarkedChatView(generics.ListAPIView):
             .prefetch_related('bookmarks', 'reaction') \
             .prefetch_related(Prefetch('channel',
                                        queryset=ChatChannel.objects.all().prefetch_related('admins', 'members'))) \
-            .filter(channel__workspace__hashed_value__exact=whv, bookmarks__issuer=self.request.user.id)
-
+            .filter(channel__workspace__hashed_value__exact=whv, bookmarks__issuer=self.request.user.id) \
+            .order_by('-created_at')
         return chats
 
-    @swagger_auto_schema(responses={200: openapi.Response('내가 북마크한 채팅만 리스트로 보내줍니다.', BookmarkedChatsSerializer(many=True))})
+    @swagger_auto_schema(
+        responses={200: openapi.Response('내가 북마크한 채팅만 리스트로 보내줍니다.', BookmarkedChatsSerializer(many=True))})
     def get(self, request, *args, **kwargs):
         q = self.get_queryset()
         response_serializer = BookmarkedChatsSerializer(q, many=True)
