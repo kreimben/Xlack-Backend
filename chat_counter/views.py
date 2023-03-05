@@ -61,13 +61,26 @@ class CounterView(
         api = CounterApi(**kwargs)
         most_recent_chat = request.data.get("most_recent_chat", None)
         is_reading = request.data.get("is_reading", False)
-        return JsonResponse(
+        err = False
+        detail = None
+        try:
             api.update(
                 chv=channel,
                 user=user,
                 most_recent_chat=most_recent_chat,
                 is_reading=is_reading,
-            ),
+            )
+
+        except ValueError as e:
+            err = True
+            detail = e
+
+        if err is False:
+            response = {"succeed": not err}
+        else:
+            response = {"msg": "error occurred", "detail": detail}
+        return JsonResponse(
+            response,
             safe=False,
         )
 

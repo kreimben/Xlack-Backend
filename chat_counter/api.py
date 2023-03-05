@@ -76,9 +76,9 @@ class CounterApi:
         user = kwargs.get("user", None)
         most_recent_chat = kwargs.get("most_recent_chat", None)
         is_reading = kwargs.get("is_reading", False)
-        if self.channel is None:
+        if self.chv is None:
             raise ValueError(
-                "CounterApi>>__get_counter:ERROR, channel is None", self.channel
+                "CounterApi>>__get_counter:ERROR, channel is None", self.chv
             )
         elif user is None:
             raise ValueError("CounterApi>>__get_counter:ERROR, user is None", user)
@@ -89,15 +89,11 @@ class CounterApi:
                 is_reading,
             )
         else:
-            q, is_created = self.counter.update_or_create(
-                channel=self.channel,
+            self.counter.update_or_create(
+                channel__hashed_value=self.chv,
                 user=user,
                 defaults={
                     "most_recent_chat_id": most_recent_chat,
                     "is_reading": is_reading,
                 },
             )
-            return repr(q), is_created
-
-        q = self.__update_counter(**kwargs)
-        return q
