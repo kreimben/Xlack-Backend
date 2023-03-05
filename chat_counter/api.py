@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Prefetch
+from django.db.models import Count, Prefetch, Q
 
 from chat_channel.models import ChatChannel
 
@@ -8,30 +8,77 @@ from .models import Counter
 
 class CounterApi:
     counter = Counter.objects.all()
-    channel = None | ChatChannel
+    chv = None
 
     def __init__(self, **kwargs):
         chv = kwargs.get("channel__hashed_value", None)
         if chv:
-            self.channel = ChatChannel.objects.get(hashed_value=chv)
-        else:
-            raise ValueError("Couter.__init__>>channel not provided")
+            self.chv = chv
 
-    def __get_counter_list(self, **kwargs):
-        if self.channel is None:
-            raise ValueError(
-                "CounterApi>>__get_counter_list:ERROR, channel is None", self.channel
+    def get_list(self, **kwargs):
+        """
+        Get or create counter which depends on chat channel,
+        and return instance of it
+
+        """
+
+        if not self.chv:
+            chv = kwargs.get("channel__hashed_value", None)
+
+        reading = self.counter.filter(channel__hashed_value=self.chv, is_reading=True)
+        not_reading = self.counter.filter(
+            channel__hashed_value=self.chv, is_reading=False
+        )
+
+        counters = list(
+            ChatChannel.objects.filter(hashed_value=self.chv)
+            .values("counter__most_recent_chat_id")
+            .annotate(total=Count("members", distinct=True))
+            .annotate(
+                reading=Count(
+                    "counter",
+                    filter=Q(counter__is_reading=True),
+                    distinct=True,
+                )
             )
-        else:
-            return self.counter.filter(channel=self.channel)
+            .annotate(
+                not_reading=Count(
+                    "counter",
+                    filter=Q(
+                        counter__is_reading=False,
+                    ),
+                    distinct=True,
+                )
+            )
+        )
 
-    def __update_counter(self, **kwargs):
+        total = counters[0]["total"]
+        if counters[0]["counter__most_recent_chat_id"] == None:
+            return {"all": total}
+
+        for counter in counters:
+            total -= counter["reading"]
+
+        l = list()
+        for counter in counters:
+            total -= counter["not_reading"]
+            l.append({counter["counter__most_recent_chat_id"]: total})
+
+        return l
+
+    def update(self, **kwargs):
+        """
+        Update single counter's read info data
+        required : kwargs['user']
+                   kwargs['most_recent_chat']
+        """
+
         user = kwargs.get("user", None)
         most_recent_chat = kwargs.get("most_recent_chat", None)
         is_reading = kwargs.get("is_reading", False)
-        if self.channel is None:
+        if self.chv is None:
             raise ValueError(
-                "CounterApi>>__get_counter:ERROR, channel is None", self.channel
+                "CounterApi>>__get_counter:ERROR, channel is None", self.chv
             )
         elif user is None:
             raise ValueError("CounterApi>>__get_counter:ERROR, user is None", user)
@@ -42,39 +89,11 @@ class CounterApi:
                 is_reading,
             )
         else:
-            q, is_created = self.counter.update_or_create(
-                channel=self.channel,
+            self.counter.update_or_create(
+                channel__hashed_value=self.chv,
                 user=user,
                 defaults={
                     "most_recent_chat_id": most_recent_chat,
                     "is_reading": is_reading,
                 },
             )
-            return repr(q), is_created
-
-    def get_list(self, **kwargs):
-        """
-        Get or create counter which depends on chat channel,
-        and return instance of it
-        """
-        qs = self.__get_counter_list(**kwargs)
-        if qs.count() == 0:
-            return {"all": self.channel.members.count()}
-        member_count = self.channel.members.count()
-        reading = qs.filter(is_reading=True).count()
-        not_reading = qs.filter(is_reading=False)
-        num = member_count - reading
-        dic = {}
-        for counter in not_reading:
-            num = num - 1
-            dic[counter.most_recent_chat.id] = num
-        return dic
-
-    def update(self, **kwargs):
-        """
-        Update single counter's read info data
-        required : kwargs['user']
-                   kwargs['most_recent_chat']
-        """
-        q = self.__update_counter(**kwargs)
-        return q
