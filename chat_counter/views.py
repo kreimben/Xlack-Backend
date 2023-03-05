@@ -26,8 +26,9 @@ class CounterView(
             return JsonResponse(
                 data={"msg": "no channel"}, status=status.HTTP_400_BAD_REQUEST
             )
+
         api = CounterApi(**kwargs)
-        return JsonResponse(api.get_list(), safe=False)
+        return JsonResponse(api.get_list(**kwargs), safe=False)
 
     @swagger_auto_schema(
         request_body=Schema(
