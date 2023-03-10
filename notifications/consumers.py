@@ -7,7 +7,7 @@ from websocket.AuthWebsocketConsumer import AuthWebsocketConsumer
 
 class NotificationsConsumer(AuthWebsocketConsumer):
     @database_sync_to_async
-    def _get(self, user):
+    def _get_unread_notifications(self, user):
         return api.get_notification_list(user)
 
     @database_sync_to_async
@@ -24,7 +24,7 @@ class NotificationsConsumer(AuthWebsocketConsumer):
 
     async def after_auth(self):
         self.room_group_name = f"{self.user.id}"
-        noti = await self._get(self.user.id)
+        noti = await self._get_unread_notifications(self.user.id)
         await self.send_json(
             {
                 "success": True,
@@ -36,7 +36,7 @@ class NotificationsConsumer(AuthWebsocketConsumer):
 
     async def from_client(self, content, **kwargs):
         if content.get("refresh", None) is True:
-            r = await self._get(self.user.id)
+            r = await self._get_unread_notifications(self.user.id)
             await self.send_json(r)
         elif (hashed_value := content.get("channel_hashed_value", None)) is not None:
             await self._read_notification(
@@ -47,7 +47,7 @@ class NotificationsConsumer(AuthWebsocketConsumer):
     async def notifications_broadcast(self, event):
         recent_chat = event.get("recent_chat_id")
         if self.user is not None:
-            r = await self._get(self.user)
+            r = await self._get_unread_notifications(self.user)
             await self.send_json({"recent_chat_id": recent_chat, "notifications": r})
         else:
             raise ValueError(

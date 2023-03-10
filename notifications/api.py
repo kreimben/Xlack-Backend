@@ -1,10 +1,9 @@
 from typing import Dict, List
 
-from django.db.models import Count, Q
+from django.db.models import Q, Prefetch
 
 from chat.models import Chat
 from chat_channel.models import ChatChannel
-
 from .models import Notification
 
 
@@ -64,20 +63,26 @@ def notify_via_rest(sender, chat_id, channel_hashed_value):
         return len(notify_via_signal(chat=c))
 
 
-def get_notification_list(receiver) -> List[Dict]:
+def get_notification_list(receiver) -> dict[str, dict[str, int]]:
     """
     get notifications belongs to user
     """
 
-    noti = Notification.objects.select_related("channel", "receiver").filter(
-        Q(had_read=False) & Q(receiver=receiver)
-    )
+    notifications = Notification.objects. \
+        select_related("channel", "receiver"). \
+        filter(Q(had_read=False) & Q(receiver=receiver)). \
+        prefetch_related(Prefetch('channel', queryset=ChatChannel.objects.select_related('workspace')))
 
-    xs = noti.values("channel__hashed_value").annotate(count=Count("had_read"))
-    result = []
-    for x in xs:
-        result.append({"channel": x["channel__hashed_value"], "count": x["count"]})
-    return result
+    d = {}
+    for notification in notifications:
+        # notification: Notification # For debugging
+        hv = notification.channel.hashed_value
+        if d.get(hv):
+            d[hv]['count'] += 1
+        else:
+            d[hv] = {'workspace_hashed_value': notification.channel.workspace.hashed_value,
+                     'count': 1}  # workspace hashed value and it's count.
+    return d
 
 
 def read_notification_list(receiver=None, channel=None):
