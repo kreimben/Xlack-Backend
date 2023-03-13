@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 from django.db.models import Q, Prefetch
 
 from chat.models import Chat
@@ -73,16 +71,23 @@ def get_notification_list(receiver) -> dict[str, dict[str, int]]:
         filter(Q(had_read=False) & Q(receiver=receiver)). \
         prefetch_related(Prefetch('channel', queryset=ChatChannel.objects.select_related('workspace')))
 
+    # For explanation of below codes,
+    # This is for O(1) time complexity of dictionary computation
+    # and O(n) time complexity of array computation (n is number of key in `d`.)
     d = {}
     for notification in notifications:
-        # notification: Notification # For debugging
+        # notification: Notification  # For debugging
         hv = notification.channel.hashed_value
         if d.get(hv):
             d[hv]['count'] += 1
         else:
-            d[hv] = {'workspace_hashed_value': notification.channel.workspace.hashed_value,
+            d[hv] = {'channel_hashed_value': notification.channel.hashed_value,
+                     'workspace_hashed_value': notification.channel.workspace.hashed_value,
                      'count': 1}  # workspace hashed value and it's count.
-    return d
+    res = []
+    for _, v in d.items():
+        res.append(v)
+    return res
 
 
 def read_notification_list(receiver=None, channel=None):
