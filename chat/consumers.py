@@ -33,6 +33,7 @@ class ChatConsumer(AuthWebsocketConsumer):
                 'success': False,
                 'msg': 'You are not in this channel.'
             })
+            return
 
         f = None
         file_id = content.get('file_id', None)
