@@ -32,7 +32,8 @@ class ChatConsumer(AuthWebsocketConsumer):
             await self.send_json({
                 'success': False,
                 'msg': 'You are not in this channel.'
-            }, close=True)
+            })
+            return
 
         f = None
         file_id = content.get('file_id', None)
