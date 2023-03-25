@@ -10,6 +10,7 @@ def upload_file(instance, filename):
 class File(models.Model):
     uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='uploaded_file')
     file = models.FileField(upload_to=upload_file)
+    file_name = models.CharField(max_length=1000, blank=True, null=True) # For searching.
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
