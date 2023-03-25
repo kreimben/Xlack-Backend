@@ -65,6 +65,8 @@ INSTALLED_APPS = [
     "notifications.apps.NotificationsConfig",
     "direct_message.apps.DirectMessageConfig",
     "call.apps.CallConfig",
+    'search.apps.SearchConfig',
+
     # Apps we installed.
     "rest_framework",
     "rest_framework.authtoken",
