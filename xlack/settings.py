@@ -83,6 +83,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "daphne",
     "silk",
+
     # Django Native App.
     "django.contrib.admin",
     "django.contrib.auth",
