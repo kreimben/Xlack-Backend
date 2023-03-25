@@ -48,6 +48,7 @@ urlpatterns = [
     path("status/", include("status.urls")),
     path("file/", include("file.urls")),
     path("notifications/", include("notifications.urls")),
+    path('search/', include('search.urls')),
 ]
 
 if settings.DEBUG:
