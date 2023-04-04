@@ -72,7 +72,6 @@ class ChatChannelView(generics.CreateAPIView,
         """
         `ChatChannel`의 설명 문구를 바꾸기 위한 엔드포인트 입니다.
         이걸로 `ChatChannel`의 이름이나 `members`는 못바꿉니다.
-        body의 `name`은 설명을 바꿀 `ChatChannel`의 이름입니다.
         `admins`안에 포함되지 않은 유저는 401이 나옵니다.
         """
         chat_channel = self.get_queryset().get(hashed_value__exact=request.data.get('hashed_value', None))
