@@ -46,9 +46,17 @@ class NotificationsConsumer(AuthWebsocketConsumer):
 
     async def notifications_broadcast(self, event):
         recent_chat = event.get("recent_chat_id")
+        channel_hashed_value = event.get("channel_hashed_value")
+
         if self.user is not None:
             r = await self._get_unread_notifications(self.user)
-            await self.send_json({"recent_chat_id": recent_chat, "notifications": r})
+            await self.send_json(
+                {
+                    "recent_chat_id": recent_chat,
+                    "notifications": r,
+                    "channel_hashed_value": channel_hashed_value,
+                }
+            )
         else:
             raise ValueError(
                 "Notification.consumer>>broadcasting target(self.user) is None"

@@ -28,5 +28,6 @@ def create_notifications(sender, **kwargs):
                 "type": "notifications.broadcast",
                 "user_id": noti.receiver_id,
                 "recent_chat_id": chat.id,
+                "channel_hashed_value": chat.channel.hashed_value,
             },
         )
