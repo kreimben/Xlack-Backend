@@ -11,8 +11,8 @@ class NotificationsConsumer(AuthWebsocketConsumer):
         return api.get_notification_list(user)
 
     @database_sync_to_async
-    def _read_notification(self, user, sender, channel):
-        return api.read_notification_list(user, sender=sender, channel=channel)
+    def _read_notification(self, user, channel):
+        return api.read_notification_list(receiver=user, channel=channel)
 
     async def before_accept(self):
         # No need to implement this behavior
@@ -40,7 +40,7 @@ class NotificationsConsumer(AuthWebsocketConsumer):
             await self.send_json(r)
         elif (hashed_value := content.get("channel_hashed_value", None)) is not None:
             await self._read_notification(
-                receiver_id=self.user.id, channel_hashed_value=hashed_value
+                receiver=self.user, channel_hashed_value=hashed_value
             )
             await self.send_json({"success": True, "msg": "OK"})
 
