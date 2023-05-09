@@ -11,7 +11,7 @@ class NotificationsConsumer(AuthWebsocketConsumer):
         return api.get_notification_list(user)
 
     @database_sync_to_async
-    def _read(self, user, sender, channel):
+    def _read_notification(self, user, sender, channel):
         return api.read_notification_list(user, sender=sender, channel=channel)
 
     async def before_accept(self):
