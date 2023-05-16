@@ -56,6 +56,7 @@ class ChatConsumer(AuthWebsocketConsumer):
                                                 "user_id": self.user.id,
                                                 "message": chat.message,
                                                 "file_id": file_id,
+                                                'created_at': chat.created_at.strftime('%a %b %d %Y %H:%M:%S'),
                                             })
 
     async def chat_broadcast(self, event):
@@ -68,4 +69,5 @@ class ChatConsumer(AuthWebsocketConsumer):
             'user_id': event['user_id'],
             'message': event['message'],
             'file_id': event['file_id'],
+            'created_at': event['created_at'],
         })
