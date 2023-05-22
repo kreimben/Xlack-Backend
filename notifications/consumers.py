@@ -61,7 +61,7 @@ class NotificationsConsumer(AuthWebsocketConsumer):
             )
 
     async def disconnect(self, code):
-        if self.room_group_name:
+        if hasattr(self, "room_group_name") and self.room_group_name:
             await self.channel_layer.group_discard(
                 self.room_group_name, self.channel_name
             )
