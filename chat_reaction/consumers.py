@@ -11,6 +11,7 @@ from websocket.AuthWebsocketConsumer import AuthWebsocketConsumer
 
 class ReactionConsumer(AuthWebsocketConsumer):
     chat_channel: ChatChannel | None = None
+    channel_hash: str | None = None
 
     @database_sync_to_async
     def create_or_add(self, chat_id, icon):
@@ -47,13 +48,20 @@ class ReactionConsumer(AuthWebsocketConsumer):
             return serial.data
 
     async def before_accept(self):
-        kwargs = self.scope["url_route"]["kwargs"]
-        self.room_group_name = kwargs["chat_channel_hashed_value"]
+        channel_hash = self.scope["url_route"]["kwargs"]["chat_channel_hashed_value"]
+        if (channel_hash == None) or (channel_hash == ""):
+            await self.send_json(
+                {"success": False, "msg": "Channel hashed value is null or blank"},
+                close=True,
+            )
+        else:
+            self.room_group_name = f"reaction_{channel_hash}"
+            self.channel_hash = channel_hash
 
     async def after_accept(self):
         try:
             self.chat_channel = await ChatChannel.objects.aget(
-                hashed_value__exact=self.room_group_name
+                hashed_value__exact=self.channel_hash
             )
         except ChatChannel.DoesNotExist:
             await self.send_json(
