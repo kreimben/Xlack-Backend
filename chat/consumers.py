@@ -57,6 +57,8 @@ class ChatConsumer(AuthWebsocketConsumer):
                                                 "message": chat.message,
                                                 "file_id": file_id,
                                                 'created_at': chat.created_at.strftime('%a %b %d %Y %H:%M:%S'),
+                                                'chat_channel_hashed_value': self.chat_channel.hashed_value,
+                                                'chat_channel_name': self.chat_channel.name
                                             })
 
     async def chat_broadcast(self, event):
@@ -70,4 +72,6 @@ class ChatConsumer(AuthWebsocketConsumer):
             'message': event['message'],
             'file_id': event['file_id'],
             'created_at': event['created_at'],
+            'chat_channel_hashed_value': event['chat_channel_hashed_value'],
+            'chat_channel_name': event['chat_channel_name'],
         })
