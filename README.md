@@ -6,6 +6,8 @@ This repository is only up to backend server using [Django](https://djangoprojec
 
 Frontend repository is [here](https://github.com/Team-Discipline/Xlack-Frontend).
 
+## 총 52개 엔드포인트
+
 #### REST API Preview Image
 
 ![Xlack](https://github.com/Team-Discipline/Xlack-Backend/assets/20333172/9d45066e-7af8-42a9-8b7e-7f3714d2fb40)
